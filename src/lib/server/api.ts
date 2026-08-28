@@ -1,6 +1,7 @@
 import { Elysia, t } from 'elysia';
 import { loginOwner, requireOwner } from './auth';
-import { clearSessionCookie, serializeCookie } from './session';
+import { clearSessionCookie } from './session';
+import { postsApi } from './postsApi';
 
 export const api = new Elysia()
 	.get('/api/health', () => ({
@@ -48,6 +49,7 @@ export const api = new Elysia()
 			throw error;
 		}
 	})
+	.use(postsApi)
 	.onError(({ code, error, set }) => {
 		const message = error instanceof Error ? error.message : 'Internal error';
 		if (code === 'NOT_FOUND') {
@@ -58,10 +60,11 @@ export const api = new Elysia()
 			set.status = 400;
 			return { error: 'Validation error' };
 		}
+		if (message === 'UNAUTHORIZED') {
+			set.status = 401;
+			return { error: 'Unauthorized' };
+		}
 		console.error('API error:', message);
 		set.status = 500;
 		return { error: 'Internal server error' };
 	});
-
-// Re-export for tests and other modules that need it.
-export { serializeCookie };

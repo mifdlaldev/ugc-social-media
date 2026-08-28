@@ -16,7 +16,8 @@
 		"format": "prettier --write .",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
-		"db:studio": "drizzle-kit studio"
+		"db:studio": "drizzle-kit studio",
+		"db:seed": "bun run src/lib/server/seed.ts"
 	},
 	"devDependencies": {
 		"@cloudflare/workers-types": "^5.20260828.1",

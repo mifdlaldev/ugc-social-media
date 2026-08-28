@@ -1,11 +1,13 @@
 import { eq } from 'drizzle-orm';
 import { db } from './db';
 import { INITIAL_CATEGORIES } from './posts';
-import { users, categories } from '../../../drizzle/schema';
+import { INITIAL_PRESETS } from './presets';
+import { users, categories, prompt_presets } from '../../../drizzle/schema';
 
 /**
  * Idempotent seed for MVP baseline data:
  * - 6 approved categories
+ * - 3 approved prompt presets
  *
  * Run manually via: bun run db:seed
  */
@@ -15,6 +17,17 @@ export async function seed() {
 		if (existing.length === 0) {
 			await db.insert(categories).values(cat);
 			console.log(`[seed] category: ${cat.name}`);
+		}
+	}
+
+	for (const preset of INITIAL_PRESETS) {
+		const existing = await db
+			.select()
+			.from(prompt_presets)
+			.where(eq(prompt_presets.slug, preset.slug));
+		if (existing.length === 0) {
+			await db.insert(prompt_presets).values(preset);
+			console.log(`[seed] preset: ${preset.name}`);
 		}
 	}
 

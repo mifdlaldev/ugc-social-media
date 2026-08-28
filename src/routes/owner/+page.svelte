@@ -32,6 +32,9 @@
 			<a href="/owner/new">
 				<Button>+ Artikel Baru</Button>
 			</a>
+			<a href="/owner/presets">
+				<Button variant="outline">Presets</Button>
+			</a>
 			<a href="/">
 				<Button variant="outline">Lihat Beranda</Button>
 			</a>

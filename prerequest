@@ -1,0 +1,12 @@
+frontend => Svelte
+backend => elysiajs
+package manager => bun
+ORM => drizzle ORM
+database => sqlite
+component => shadcn-svelte
+deploy => cloudflare worker
+ai provider => openrouter
+
+skill => 
+https://www.shadcn-svelte.com/docs/skills
+cloudflare

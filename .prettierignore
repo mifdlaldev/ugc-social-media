@@ -1,0 +1,19 @@
+# Package Managers
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+bun.lock
+bun.lockb
+
+# Miscellaneous
+/static/
+
+# Third-party skills (managed via skills CLI, do not reformat)
+/.agents/
+
+# OpenSpec artifacts
+/openspec/
+
+# Tooling config
+skills-lock.json
+opencode.json

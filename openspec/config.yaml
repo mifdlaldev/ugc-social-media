@@ -1,0 +1,50 @@
+schema: spec-driven
+
+context: |
+  Project: UGC social media platform for civil engineering / construction / architecture education.
+  MVP is single-creator (one architect/owner). The app converts the owner's educational article
+  into structured, copy-ready image-generation prompt blocks via a text LLM on OpenRouter.
+  The app generates prompts, NOT images. Images are produced externally by the user.
+
+  Fixed tech stack (DO NOT change without an approved change):
+  - Frontend: Svelte (SvelteKit, Svelte 5 runes)
+  - Backend: ElysiaJS (TypeScript)
+  - Package manager: Bun
+  - ORM: Drizzle ORM
+  - Database: SQLite (local: bun:sqlite/libsql; production: Cloudflare D1)
+  - Components: shadcn-svelte
+  - Deploy: Cloudflare Workers (wrangler)
+  - AI provider: OpenRouter (text -> prompt blocks only)
+
+  Anti-hallucination rules (CRITICAL):
+  - Never invent package versions, model IDs, API schemas, or CLI flags. Verify in docs/local files.
+  - Never invent product features beyond openspec/specs.
+  - Generated prompt blocks MUST derive all factual claims ONLY from the supplied article.
+  - No web search, model memory, or external facts may be injected into prompt output.
+  - Source of truth for behavior lives in openspec/specs/. Active work lives in openspec/changes/.
+
+rules:
+  specs:
+    - Use RFC 2119 keywords (SHALL / MUST / SHOULD / MAY).
+    - Requirements state WHAT the system does, not HOW (implementation belongs in design.md/tasks.md).
+    - Every requirement needs at least one Given/When/Then scenario.
+    - Keep requirements verifiable and free of internal class/function names.
+  design:
+    - Keep design.md focused on technical approach and architecture decisions.
+    - Reference DESIGN.md for the canonical architecture; do not duplicate it.
+    - Mark any unverified deployment/integration detail as TBD and call it out.
+  tasks:
+    - Group tasks under clear headings with hierarchical numbering (1.1, 1.2, ...).
+    - Each task should be completable in one focused session.
+    - Mark a task done only when its specified behavior is implemented and verified.
+
+operations:
+  apply:
+    guidance:
+      - Read DESIGN.md and the relevant openspec/specs before writing code.
+      - Verify exact package versions, model IDs, and CLI flags against installed files/docs.
+      - Never silently change scope; update the change artifacts and ask if behavior diverges.
+  archive:
+    guidance:
+      - Confirm all tasks.md boxes are checked before archiving.
+      - Keep the completion summary concise and factual.

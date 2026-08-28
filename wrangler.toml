@@ -1,0 +1,20 @@
+name = "ugc-social-media"
+compatibility_date = "2025-09-01"
+compatibility_flags = ["nodejs_compat"]
+main = ".svelte-kit/cloudflare/_worker.js"
+assets = { binding = "ASSETS", directory = ".svelte-kit/cloudflare" }
+
+# D1 database binding (production). Provision with:
+#   bunx wrangler d1 create ugc-social-media-db
+#   bunx wrangler d1 execute ugc-social-media-db --file=./drizzle/migrations/0000_*.sql --remote
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "ugc-social-media-db"
+# database_id = "<paste-id-here>"
+
+# Secrets (set via `wrangler secret put` — never commit values):
+#   OPENROUTER_API_KEY
+#   OPENROUTER_MODEL
+#   SESSION_SECRET
+#   ADMIN_PASSWORD_HASH
+#   DATABASE_URL

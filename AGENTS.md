@@ -64,7 +64,7 @@ Before editing any code, read:
 | Deploy          | **Cloudflare Workers** | wrangler + `wrangler.toml`; D1 binding for production                                                                                        |
 | AI provider     | **OpenRouter**         | text LLM via `/api/v1/chat/completions`; API key from secret/env                                                                             |
 
-## Repository Layout (target)
+## Repository Layout (actual)
 
 ```
 .
@@ -76,18 +76,20 @@ Before editing any code, read:
 │   ├── specs/                    # source of truth (merged from archived changes)
 │   └── changes/                  # active + archived changes
 ├── src/
-│   ├── index.ts                  # Elysia entry (fetch handler for Cloudflare Workers)
-│   ├── routes/                   # API route groups
-│   ├── services/                 # business logic (incl. prompt generation)
-│   ├── lib/                      # svelte: $lib (if frontend served from same repo)
+│   ├── hooks.server.ts           # routes /api/* to Elysia, rest to SvelteKit
+│   ├── routes/                   # SvelteKit pages
+│   └── lib/
+│       ├── server/api.ts         # Elysia app definition (backend)
+│       ├── server/db.ts          # Drizzle client (bun:sqlite, local)
+│       └── components/ui/        # shadcn-svelte components
 ├── drizzle/
 │   ├── schema.ts
 │   ├── migrations/
-├── static/                       # svelte assets
-└── wrangler.toml
+├── data/                         # local SQLite file (gitignored)
+├── static/
+├── wrangler.toml
+└── package.json
 ```
-
-> The exact monorepo split (single repo serving SvelteKit + Elysia vs. two packages) is **decided in DESIGN.md §Monorepo Layout**. Follow that decision. If it's marked TBD, ask the owner before scaffolding.
 
 ## Commands
 

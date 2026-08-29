@@ -2,8 +2,6 @@ import { Elysia, t } from 'elysia';
 import { loginOwner, requireOwner } from './auth';
 import { clearSessionCookie } from './session';
 import { postsApi } from './postsApi';
-import { presetsApi } from './presetsApi';
-import { generationApi } from './generationApi';
 
 export const api = new Elysia()
 	.get('/api/health', () => ({
@@ -52,8 +50,6 @@ export const api = new Elysia()
 		}
 	})
 	.use(postsApi)
-	.use(presetsApi)
-	.use(generationApi)
 	.onError(({ code, error, set }) => {
 		const message = error instanceof Error ? error.message : 'Internal error';
 		if (code === 'NOT_FOUND') {

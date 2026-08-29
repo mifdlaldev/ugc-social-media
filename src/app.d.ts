@@ -3,9 +3,9 @@
 declare global {
 	namespace App {
 		// interface Error {}
-		// interface Locals {}
-		// interface PageData {}
-		// interface PageState {}
+		interface Locals {
+			session?: import('$lib/server/session').SessionPayload | null;
+		}
 
 		interface Platform {
 			env: {

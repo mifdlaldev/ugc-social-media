@@ -2,45 +2,36 @@ import { Elysia, t } from 'elysia';
 import { eq, sql } from 'drizzle-orm';
 import { requireOwner } from './auth';
 import { db } from './db';
-import { posts } from '../../../drizzle/schema';
-import {
-	getOwnerPostById,
-	getPublishedPostBySlug,
-	listAllPosts,
-	listCategories,
-	listPublishedPosts,
-	listTags
-} from './posts';
-
-function slugify(input: string): string {
-	return input
-		.toLowerCase()
-		.trim()
-		.replace(/[^a-z0-9\s-]/g, '')
-		.replace(/[\s_]+/g, '-')
-		.replace(/-+/g, '-')
-		.replace(/^-|-$/g, '');
-}
+import { posts, post_research_sources } from '../../../drizzle/schema';
+import { getOwnerPostById, getPublishedPostById, listAllPosts, listPublishedPosts } from './posts';
+import { compileResearch } from './researchService';
 
 const postBody = t.Object({
-	title: t.String({ minLength: 1, maxLength: 200 }),
-	article_body: t.String({ minLength: 1, maxLength: 10_000 }),
-	excerpt: t.Optional(t.String({ maxLength: 500 })),
-	slug: t.Optional(t.String({ maxLength: 200 })),
+	topic: t.String({ minLength: 1, maxLength: 200 }),
+	platform: t.Optional(
+		t.Enum({ instagram: 'instagram', facebook: 'facebook', linkedin: 'linkedin' })
+	),
+	tone: t.Optional(
+		t.Enum({
+			detail: 'detail',
+			observatif: 'observatif',
+			informatif: 'informatif',
+			menjual: 'menjual',
+			creative: 'creative'
+		})
+	),
+	slide_count: t.Optional(t.Integer({ minimum: 3, maximum: 7 })),
+	excerpt: t.Optional(t.String({ maxLength: 300 })),
 	status: t.Optional(t.Enum({ draft: 'draft', published: 'published' }))
 });
 
 export const postsApi = new Elysia({ prefix: '/api' })
-	.get('/feed', async ({ query, set }) => {
-		const result = await listPublishedPosts({
-			categorySlug: query.category,
-			tagSlug: query.tag
-		});
+	.get('/feed', async ({ set }) => {
 		set.status = 200;
-		return result;
+		return await listPublishedPosts();
 	})
-	.get('/posts/:slug', async ({ params, set }) => {
-		const post = await getPublishedPostBySlug(params.slug);
+	.get('/posts/:id', async ({ params, set }) => {
+		const post = await getPublishedPostById(Number(params.id));
 		if (!post) {
 			set.status = 404;
 			return { error: 'Post not found' };
@@ -57,14 +48,14 @@ export const postsApi = new Elysia({ prefix: '/api' })
 		'/posts',
 		async ({ request, body, set }) => {
 			await requireOwner(request);
-			const slug = body.slug && body.slug.length > 0 ? body.slug : slugify(body.title);
 			const inserted = await db
 				.insert(posts)
 				.values({
 					author_id: 1,
-					title: body.title,
-					slug,
-					article_body: body.article_body,
+					topic: body.topic,
+					platform: body.platform ?? 'instagram',
+					tone: body.tone ?? 'informatif',
+					slide_count: body.slide_count ?? 5,
 					excerpt: body.excerpt ?? null,
 					status: body.status ?? 'draft'
 				})
@@ -86,10 +77,11 @@ export const postsApi = new Elysia({ prefix: '/api' })
 			const updated = await db
 				.update(posts)
 				.set({
-					title: body.title ?? existing.title,
-					article_body: body.article_body ?? existing.article_body,
+					topic: body.topic ?? existing.topic,
+					platform: body.platform ?? existing.platform,
+					tone: body.tone ?? existing.tone,
+					slide_count: body.slide_count ?? existing.slide_count,
 					excerpt: body.excerpt !== undefined ? body.excerpt : existing.excerpt,
-					slug: body.slug && body.slug.length > 0 ? body.slug : existing.slug,
 					status: body.status ?? existing.status,
 					published_at:
 						body.status === 'published' && existing.published_at === null
@@ -103,10 +95,21 @@ export const postsApi = new Elysia({ prefix: '/api' })
 		},
 		{
 			body: t.Object({
-				title: t.Optional(t.String({ minLength: 1, maxLength: 200 })),
-				article_body: t.Optional(t.String({ minLength: 1, maxLength: 10_000 })),
-				excerpt: t.Optional(t.String({ maxLength: 500 })),
-				slug: t.Optional(t.String({ maxLength: 200 })),
+				topic: t.Optional(t.String({ minLength: 1, maxLength: 200 })),
+				platform: t.Optional(
+					t.Enum({ instagram: 'instagram', facebook: 'facebook', linkedin: 'linkedin' })
+				),
+				tone: t.Optional(
+					t.Enum({
+						detail: 'detail',
+						observatif: 'observatif',
+						informatif: 'informatif',
+						menjual: 'menjual',
+						creative: 'creative'
+					})
+				),
+				slide_count: t.Optional(t.Integer({ minimum: 3, maximum: 7 })),
+				excerpt: t.Optional(t.String({ maxLength: 300 })),
 				status: t.Optional(t.Enum({ draft: 'draft', published: 'published' }))
 			})
 		}
@@ -122,11 +125,51 @@ export const postsApi = new Elysia({ prefix: '/api' })
 		set.status = 200;
 		return { ok: true };
 	})
-	.get('/categories', async ({ set }) => {
-		set.status = 200;
-		return await listCategories();
+	.post('/posts/:id/research', async ({ request, params, set }) => {
+		await requireOwner(request);
+		const post = await getOwnerPostById(Number(params.id));
+		if (!post) {
+			set.status = 404;
+			return { success: false, error: 'Post not found' };
+		}
+		try {
+			const research = await compileResearch(post.topic);
+			await db
+				.delete(post_research_sources)
+				.where(eq(post_research_sources.post_id, post.id));
+			for (const source of research.sources) {
+				await db.insert(post_research_sources).values({
+					post_id: post.id,
+					source_url: source.url,
+					source_title: source.title,
+					source_snippet: source.snippet,
+					source_engine: 'you.com',
+					relevance_score: null
+				});
+			}
+			set.status = 200;
+			return { success: true, count: research.sources.length };
+		} catch (err) {
+			const message = err instanceof Error ? err.message : 'Unknown error';
+			set.status = 500;
+			return { success: false, error: message };
+		}
 	})
-	.get('/tags', async ({ set }) => {
+	.post('/posts/:id/approve-research', async ({ request, params, set }) => {
+		await requireOwner(request);
+		const post = await getOwnerPostById(Number(params.id));
+		if (!post) {
+			set.status = 404;
+			return { ok: false, error: 'Post not found' };
+		}
+		const sources = await db
+			.select()
+			.from(post_research_sources)
+			.where(eq(post_research_sources.post_id, post.id));
+		if (sources.length === 0) {
+			set.status = 400;
+			return { ok: false, error: 'No research sources. Run research first.' };
+		}
 		set.status = 200;
-		return await listTags();
+		return { ok: true };
 	});

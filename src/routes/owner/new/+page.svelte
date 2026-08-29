@@ -37,7 +37,14 @@
 					status: 'draft'
 				})
 			});
-			const data = (await res.json()) as { id?: number; error?: string };
+			const contentType = res.headers.get('content-type') ?? '';
+			let data: { id?: number; error?: string } = {};
+			if (contentType.includes('application/json')) {
+				data = (await res.json()) as { id?: number; error?: string };
+			} else {
+				const text = await res.text();
+				data = { error: text || `HTTP ${res.status}` };
+			}
 			if (!res.ok || !data.id) {
 				error = data.error ?? 'Gagal membuat post';
 			} else {

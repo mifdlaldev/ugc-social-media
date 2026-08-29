@@ -1,10 +1,19 @@
 import { Elysia, t } from 'elysia';
-import { eq, sql } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 import { requireOwner } from './auth';
 import { db } from './db';
-import { posts, post_research_sources } from '../../../drizzle/schema';
+import {
+	generation_attempts,
+	post_research_sources,
+	prompt_slides,
+	provider_variants,
+	posts
+} from '$lib/server/schema';
 import { getOwnerPostById, getPublishedPostById, listAllPosts, listPublishedPosts } from './posts';
 import { compileResearch } from './researchService';
+import { generateSlides } from './promptGenerator';
+import { config } from './config';
+import { createHash } from 'node:crypto';
 
 const postBody = t.Object({
 	topic: t.String({ minLength: 1, maxLength: 200 }),
@@ -172,4 +181,101 @@ export const postsApi = new Elysia({ prefix: '/api' })
 		}
 		set.status = 200;
 		return { ok: true };
+	})
+	.post('/posts/:id/generate', async ({ request, params, set }) => {
+		await requireOwner(request);
+		const post = await getOwnerPostById(Number(params.id));
+		if (!post) {
+			set.status = 404;
+			return { success: false, error: 'Post not found' };
+		}
+		const sources = await db
+			.select()
+			.from(post_research_sources)
+			.where(eq(post_research_sources.post_id, post.id));
+		if (sources.length === 0) {
+			set.status = 400;
+			return { success: false, error: 'No research sources' };
+		}
+		const researchBrief = sources
+			.map((s, i) => `[${i + 1}] ${s.source_title ?? ''}\n${s.source_snippet ?? ''}\nURL: ${s.source_url}`)
+			.join('\n\n');
+		try {
+			const result = await generateSlides(
+				post.topic,
+				researchBrief,
+				post.platform,
+				post.tone,
+				post.slide_count
+			);
+			const oldSlides = await db
+				.select({ id: prompt_slides.id })
+				.from(prompt_slides)
+				.where(eq(prompt_slides.post_id, post.id));
+			if (oldSlides.length > 0) {
+				const oldIds = oldSlides.map((s) => s.id);
+				await db.delete(provider_variants).where(inArray(provider_variants.slide_id, oldIds));
+			}
+			await db.delete(prompt_slides).where(eq(prompt_slides.post_id, post.id));
+			for (const slide of result.slides) {
+				const [inserted] = await db
+					.insert(prompt_slides)
+					.values({
+						post_id: post.id,
+						slide_index: slide.slide_index,
+						slide_type: slide.slide_type,
+						slide_title: slide.slide_title,
+						research_context: slide.research_context
+					})
+					.returning();
+				if (!inserted) continue;
+				for (const variant of slide.variants) {
+					await db.insert(provider_variants).values({
+						slide_id: inserted.id,
+						provider: variant.provider,
+						prompt_text: variant.prompt_text,
+						visual_notes: variant.visual_notes,
+						on_image_text: variant.on_image_text,
+						aspect_ratio: variant.aspect_ratio
+					});
+				}
+			}
+			const inputHash = createHash('sha256')
+				.update(post.topic + researchBrief)
+				.digest('hex')
+				.slice(0, 16);
+			await db.insert(generation_attempts).values({
+				post_id: post.id,
+				input_hash: inputHash,
+				model_id: config.openRouterModel,
+				raw_output: JSON.stringify(result.synthesis),
+				parsed_result: JSON.stringify(result.slides),
+				status: 'success'
+			});
+			set.status = 200;
+			return { success: true, slideCount: result.slides.length };
+		} catch (err) {
+			const message = err instanceof Error ? err.message : 'Unknown error';
+			set.status = 500;
+			return { success: false, error: message };
+		}
+	})
+	.get('/posts/:id/slides', async ({ params, set }) => {
+		const postId = Number(params.id);
+		const slides = await db
+			.select()
+			.from(prompt_slides)
+			.where(eq(prompt_slides.post_id, postId));
+		if (slides.length === 0) {
+			set.status = 200;
+			return { slides: [], variants: [] };
+		}
+		const slideIds = slides.map((s) => s.id);
+		const variants = await db
+			.select()
+			.from(provider_variants)
+			.where(inArray(provider_variants.slide_id, slideIds));
+		set.status = 200;
+		return { slides, variants };
 	});
+

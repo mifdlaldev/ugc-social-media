@@ -5,6 +5,8 @@
  * Uses the public You.com web search endpoint.
  */
 
+import { config } from './config';
+
 export interface SearchResult {
 	title: string;
 	url: string;
@@ -17,13 +19,10 @@ export interface ResearchBrief {
 	topic: string;
 }
 
-const YOU_SEARCH_URL = 'https://api.you.com/search';
+const YOU_SEARCH_URL = 'https://api.you.com/v1/web-search';
 
 export async function searchYouCom(query: string, limit = 10): Promise<SearchResult[]> {
-	const apiKey = process.env.YOU_API_KEY;
-	if (!apiKey) {
-		throw new Error('YOU_API_KEY_NOT_SET');
-	}
+	const apiKey = config.youApiKey;
 	const url = new URL(YOU_SEARCH_URL);
 	url.searchParams.set('query', query);
 	url.searchParams.set('num_web_results', String(limit));

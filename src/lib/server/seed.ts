@@ -2,11 +2,17 @@ import { db } from './db';
 import { users } from '../../../drizzle/schema';
 
 export async function seed() {
-	const userCount = await db.select().from(users);
-	if (userCount.length === 0) {
-		console.warn(
-			'[seed] NO owner user created: the owner is provisioned via ADMIN_PASSWORD_HASH env (single-creator MVP).'
-		);
+	const existing = await db.select().from(users);
+	if (existing.length === 0) {
+		await db.insert(users).values({
+			id: 1,
+			email: 'owner@localhost',
+			password_hash: 'placeholder',
+			role: 'owner'
+		});
+		console.log('[seed] owner user created (id=1)');
+	} else {
+		console.log(`[seed] ${existing.length} user(s) already exist, skipping`);
 	}
 	console.log('[seed] done.');
 }

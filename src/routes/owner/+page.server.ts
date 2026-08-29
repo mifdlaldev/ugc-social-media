@@ -1,13 +1,16 @@
+import { error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { getSessionFromRequest } from '$lib/server/auth';
 import { listAllPosts } from '$lib/server/posts';
-import { redirect } from '@sveltejs/kit';
 
-export const load: PageServerLoad = async ({ request }) => {
-	const session = await getSessionFromRequest(request);
-	if (!session) {
-		throw redirect(303, '/login');
+export const load: PageServerLoad = async ({ locals, url }) => {
+	if (!locals.session) {
+		throw redirect(302, `/login?next=${encodeURIComponent(url.pathname)}`);
 	}
 	const posts = await listAllPosts();
-	return { posts };
+	if (posts.length === 0) {
+		return { posts: [], nextPath: '/owner' };
+	}
+	return { posts, nextPath: '/owner' };
 };
+
+export const _error = error;

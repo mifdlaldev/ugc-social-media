@@ -1,122 +1,141 @@
 <script lang="ts">
-	import type { PageProps } from './$types';
-	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
-	import { Textarea } from '$lib/components/ui/textarea';
-	import * as Field from '$lib/components/ui/field';
 	import * as Card from '$lib/components/ui/card';
+	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
+	import { Alert, AlertDescription, AlertTitle } from '$lib/components/ui/alert';
+	import { goto } from '$app/navigation';
+	import type { PageData, ActionData } from './$types';
 
-	let { data }: PageProps = $props();
-	const post = $derived(data.post);
+	let { data, form }: { data: PageData; form: ActionData } = $props();
 
-	let title = $state(post.title);
-	let excerpt = $state(post.excerpt ?? '');
-	let articleBody = $state(post.article_body);
-	let status = $state<'draft' | 'published'>(post.status);
-	let error = $state('');
-	let loading = $state(false);
+	let post = $derived(data.post);
+	let sources = $derived(data.sources);
+	let researching = $state(false);
+	let approveError = $state('');
 
-	async function handleSubmit(event: SubmitEvent) {
-		event.preventDefault();
-		error = '';
-		loading = true;
+	async function runResearch() {
+		researching = true;
 		try {
-			const res = await fetch(`/api/posts/${post.id}`, {
-				method: 'PUT',
-				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify({
-					title,
-					article_body: articleBody,
-					excerpt: excerpt || undefined,
-					status
-				})
-			});
-			const data = (await res.json()) as { ok?: boolean; error?: string };
-			if (!res.ok) {
-				error = data.error ?? 'Gagal menyimpan artikel';
+			const res = await fetch(`/api/posts/${post.id}/research`, { method: 'POST' });
+			const data = (await res.json()) as { success?: boolean; count?: number; error?: string };
+			if (!res.ok || !data.success) {
+				alert(data.error ?? 'Riset gagal. Coba lagi.');
 			} else {
-				window.location.href = '/owner';
+				window.location.reload();
 			}
 		} catch (err) {
-			error = err instanceof Error ? err.message : 'Terjadi kesalahan';
+			alert(err instanceof Error ? err.message : 'Terjadi kesalahan');
 		} finally {
-			loading = false;
+			researching = false;
 		}
+	}
+
+	async function approveResearch() {
+		approveError = '';
+		if (sources.length === 0) {
+			approveError = 'Belum ada sumber. Jalankan riset dulu.';
+			return;
+		}
+		try {
+			const res = await fetch(`/api/posts/${post.id}/approve-research`, { method: 'POST' });
+			const data = (await res.json()) as { ok?: boolean; error?: string };
+			if (!res.ok || !data.ok) {
+				approveError = data.error ?? 'Gagal approve';
+			} else {
+				goto(`/owner/generate/${post.id}`);
+			}
+		} catch (err) {
+			approveError = err instanceof Error ? err.message : 'Terjadi kesalahan';
+		}
+	}
+
+	function truncateSnippet(s: string | null, max = 180): string {
+		if (!s) return '';
+		return s.length > max ? s.slice(0, max) + '...' : s;
 	}
 </script>
 
 <svelte:head>
-	<title>Edit Artikel</title>
+	<title>Edit Post #{post.id}</title>
 </svelte:head>
 
-<div class="mx-auto max-w-2xl px-4 py-8">
-	<h1 class="mb-6 text-3xl font-bold tracking-tight">Edit Artikel</h1>
+<div class="mx-auto max-w-4xl px-6 py-12">
+	<header class="mb-8 flex items-end justify-between gap-4">
+		<div class="min-w-0 flex-1">
+			<div class="text-text-muted mb-2 flex items-center gap-2 font-mono text-xs">
+				<span>#{post.id}</span>
+				<span>·</span>
+				<Badge variant={post.status === 'published' ? 'default' : 'outline'}>
+					{post.status}
+				</Badge>
+			</div>
+			<h1 class="text-display text-foreground truncate font-mono">{post.topic}</h1>
+			<div class="text-text-secondary mt-3 flex flex-wrap items-center gap-2">
+				<Badge variant="secondary">{post.platform}</Badge>
+				<Badge variant="outline">{post.tone}</Badge>
+				<Badge variant="outline">{post.slide_count} slides</Badge>
+			</div>
+		</div>
+		<Button variant="ghost" onclick={() => goto('/owner')}>Kembali</Button>
+	</header>
 
-	<Card.Root>
-		<Card.Content>
-			<form onsubmit={handleSubmit} class="flex flex-col gap-5">
-				<Field.Field>
-					<Field.FieldLabel for="title">Judul</Field.FieldLabel>
-					<Input id="title" bind:value={title} required maxlength={200} />
-				</Field.Field>
-
-				<Field.Field>
-					<Field.FieldLabel for="excerpt">Ringkasan (opsional)</Field.FieldLabel>
-					<Textarea id="excerpt" bind:value={excerpt} maxlength={500} rows={2} />
-				</Field.Field>
-
-				<Field.Field>
-					<Field.FieldLabel for="article_body">Isi Artikel</Field.FieldLabel>
-					<Textarea
-						id="article_body"
-						bind:value={articleBody}
-						required
-						maxlength={10000}
-						rows={12}
-					/>
-					<Field.FieldDescription>Maksimal 10.000 karakter.</Field.FieldDescription>
-				</Field.Field>
-
-				<Field.Field>
-					<Field.FieldLegend>Kategori saat ini</Field.FieldLegend>
-					<div class="flex flex-wrap gap-2">
-						{#each post.categories as cat (cat.id)}
-							<Badge variant="secondary">{cat.name}</Badge>
-						{/each}
-					</div>
-					<Field.FieldDescription>
-						Kategori dapat diubah di versi berikutnya.
-					</Field.FieldDescription>
-				</Field.Field>
-
-				<Field.Field>
-					<Field.FieldLegend>Status</Field.FieldLegend>
-					<Field.FieldSet>
-						<label class="flex items-center gap-2">
-							<input type="radio" name="status" value="draft" bind:group={status} />
-							Draft
-						</label>
-						<label class="flex items-center gap-2">
-							<input type="radio" name="status" value="published" bind:group={status} />
-							Published
-						</label>
-					</Field.FieldSet>
-				</Field.Field>
-
-				{#if error}
-					<p class="text-sm text-destructive">{error}</p>
-				{/if}
-
-				<div class="flex justify-end gap-2">
-					<a href="/owner">
-						<Button type="button" variant="outline">Batal</Button>
-					</a>
-					<Button type="submit" disabled={loading}>
-						{loading ? 'Menyimpan...' : 'Simpan Perubahan'}
-					</Button>
-				</div>
-			</form>
+	<Card.Root class="mb-6">
+		<Card.Header>
+			<Card.Title>Riset</Card.Title>
+			<Card.Description>
+				AI akan mencari data real-time via You.com. Tinjau hasil sebelum generate prompt.
+			</Card.Description>
+		</Card.Header>
+		<Card.Content class="flex items-center justify-between gap-4">
+			<p class="text-text-secondary text-sm">
+				{sources.length === 0
+					? 'Belum ada riset. Klik tombol untuk mulai.'
+					: `${sources.length} sumber tersimpan.`}
+			</p>
+			<Button onclick={runResearch} disabled={researching}>
+				{researching ? 'Mencari...' : sources.length === 0 ? 'Riset Sekarang' : 'Riset Ulang'}
+			</Button>
 		</Card.Content>
 	</Card.Root>
+
+	{#if sources.length > 0}
+		<section class="mb-6">
+			<h2 class="text-h2 text-foreground mb-4">Hasil Riset</h2>
+			<div class="grid gap-3">
+				{#each sources as source (source.id)}
+					<Card.Root class="hover-lift transition-base">
+						<Card.Content class="p-5">
+							<h3 class="text-h3 text-foreground mb-2 line-clamp-1">
+								{source.source_title ?? 'Tanpa judul'}
+							</h3>
+							<p class="text-text-secondary mb-3 text-sm">
+								{truncateSnippet(source.source_snippet)}
+							</p>
+							<a
+								href={source.source_url}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="text-accent font-mono text-xs hover:underline"
+							>
+								{source.source_url}
+							</a>
+						</Card.Content>
+					</Card.Root>
+				{/each}
+			</div>
+		</section>
+
+		{#if approveError}
+			<Alert class="mb-6">
+				<AlertTitle>Gagal</AlertTitle>
+				<AlertDescription>{approveError}</AlertDescription>
+			</Alert>
+		{/if}
+
+		<div class="flex justify-end">
+			<Button onclick={approveResearch} size="lg">
+				Approve & Generate
+			</Button>
+		</div>
+	{/if}
 </div>

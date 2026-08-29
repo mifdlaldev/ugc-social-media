@@ -1,12 +1,5 @@
 import { sql } from 'drizzle-orm';
-import {
-	index,
-	integer,
-	primaryKey,
-	sqliteTable,
-	text,
-	uniqueIndex
-} from 'drizzle-orm/sqlite-core';
+import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
 // ---- users (single pre-provisioned owner account) ----
 export const users = sqliteTable(
@@ -28,7 +21,7 @@ export const users = sqliteTable(
 	(table) => [uniqueIndex('users_email_idx').on(table.email)]
 );
 
-// ---- posts (educational articles) ----
+// ---- posts (social media posts) ----
 export const posts = sqliteTable(
 	'posts',
 	{
@@ -36,10 +29,17 @@ export const posts = sqliteTable(
 		author_id: integer('author_id')
 			.notNull()
 			.references(() => users.id, { onDelete: 'restrict' }),
-		title: text('title').notNull(),
-		slug: text('slug').notNull().unique(),
-		article_body: text('article_body').notNull(),
-		excerpt: text('excerpt'),
+		topic: text('topic').notNull(), // max 200 char, e.g. "Bata merah vs bata ringan"
+		platform: text('platform', { enum: ['instagram', 'facebook', 'linkedin'] })
+			.notNull()
+			.default('instagram'),
+		tone: text('tone', {
+			enum: ['detail', 'observatif', 'informatif', 'menjual', 'creative']
+		})
+			.notNull()
+			.default('informatif'),
+		slide_count: integer('slide_count').notNull().default(5), // 3-7
+		excerpt: text('excerpt'), // auto-generated from research, max 300 char
 		status: text('status', { enum: ['draft', 'published'] })
 			.notNull()
 			.default('draft'),
@@ -57,82 +57,75 @@ export const posts = sqliteTable(
 	]
 );
 
-// ---- categories (controlled taxonomy) ----
-export const categories = sqliteTable(
-	'categories',
+// ---- post_research_sources (research results per post) ----
+export const post_research_sources = sqliteTable(
+	'post_research_sources',
 	{
 		id: integer('id').primaryKey({ autoIncrement: true }),
-		name: text('name').notNull().unique(),
-		slug: text('slug').notNull().unique(),
-		created_at: integer('created_at', { mode: 'timestamp' })
-			.notNull()
-			.default(sql`(unixepoch())`)
-	},
-	(table) => [uniqueIndex('categories_slug_idx').on(table.slug)]
-);
-
-export const post_categories = sqliteTable(
-	'post_categories',
-	{
 		post_id: integer('post_id')
 			.notNull()
 			.references(() => posts.id, { onDelete: 'cascade' }),
-		category_id: integer('category_id')
-			.notNull()
-			.references(() => categories.id, { onDelete: 'cascade' })
-	},
-	(table) => [primaryKey({ columns: [table.post_id, table.category_id] })]
-);
-
-// ---- tags (owner-controlled labels) ----
-export const tags = sqliteTable(
-	'tags',
-	{
-		id: integer('id').primaryKey({ autoIncrement: true }),
-		name: text('name').notNull().unique(),
-		slug: text('slug').notNull().unique(),
+		source_url: text('source_url').notNull(),
+		source_title: text('source_title'),
+		source_snippet: text('source_snippet'),
+		source_engine: text('source_engine').notNull().default('you.com'), // only you.com
+		relevance_score: integer('relevance_score'), // 0-1000 (store as integer to avoid float issues)
 		created_at: integer('created_at', { mode: 'timestamp' })
 			.notNull()
 			.default(sql`(unixepoch())`)
 	},
-	(table) => [uniqueIndex('tags_slug_idx').on(table.slug)]
+	(table) => [index('research_post_idx').on(table.post_id)]
 );
 
-export const post_tags = sqliteTable(
-	'post_tags',
+// ---- prompt_slides (carousel slides per post) ----
+export const prompt_slides = sqliteTable(
+	'prompt_slides',
 	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
 		post_id: integer('post_id')
 			.notNull()
 			.references(() => posts.id, { onDelete: 'cascade' }),
-		tag_id: integer('tag_id')
+		slide_index: integer('slide_index').notNull(), // 0-based
+		slide_type: text('slide_type', {
+			enum: ['hook', 'problem', 'data', 'solution', 'cta', 'custom']
+		})
 			.notNull()
-			.references(() => tags.id, { onDelete: 'cascade' })
-	},
-	(table) => [primaryKey({ columns: [table.post_id, table.tag_id] })]
-);
-
-// ---- prompt_presets (owner-controlled visual intents) ----
-export const prompt_presets = sqliteTable(
-	'prompt_presets',
-	{
-		id: integer('id').primaryKey({ autoIncrement: true }),
-		name: text('name').notNull(),
-		slug: text('slug').notNull().unique(),
-		platform: text('platform').notNull(),
-		aspect_ratio: text('aspect_ratio').notNull(), // e.g. "1:1", "9:16", "4:5"
-		language: text('language').notNull().default('id'),
-		visual_tone: text('visual_tone'),
-		tool_notes: text('tool_notes', { mode: 'json' }).$type<Record<string, string>>(),
-		is_active: integer('is_active', { mode: 'boolean' }).notNull().default(true),
-		sort_order: integer('sort_order').notNull().default(0),
+			.default('custom'),
+		slide_title: text('slide_title'),
+		research_context: text('research_context'),
 		created_at: integer('created_at', { mode: 'timestamp' })
-			.notNull()
-			.default(sql`(unixepoch())`),
-		updated_at: integer('updated_at', { mode: 'timestamp' })
 			.notNull()
 			.default(sql`(unixepoch())`)
 	},
-	(table) => [index('presets_active_idx').on(table.is_active, table.sort_order)]
+	(table) => [
+		index('slides_post_idx').on(table.post_id),
+		index('slides_index_idx').on(table.post_id, table.slide_index)
+	]
+);
+
+// ---- provider_variants (per-provider prompt per slide) ----
+export const provider_variants = sqliteTable(
+	'provider_variants',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		slide_id: integer('slide_id')
+			.notNull()
+			.references(() => prompt_slides.id, { onDelete: 'cascade' }),
+		provider: text('provider', { enum: ['gpt-image', 'nano-banana', 'recraft'] }).notNull(),
+		prompt_text: text('prompt_text').notNull(),
+		visual_notes: text('visual_notes'),
+		on_image_text: text('on_image_text'),
+		aspect_ratio: text('aspect_ratio', { enum: ['1:1', '9:16', '4:5', '1.91:1'] })
+			.notNull()
+			.default('1:1'),
+		created_at: integer('created_at', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`(unixepoch())`)
+	},
+	(table) => [
+		index('variants_slide_idx').on(table.slide_id),
+		index('variants_provider_idx').on(table.slide_id, table.provider)
+	]
 );
 
 // ---- generation_attempts (one record per prompt-generation request) ----
@@ -143,12 +136,8 @@ export const generation_attempts = sqliteTable(
 		post_id: integer('post_id')
 			.notNull()
 			.references(() => posts.id, { onDelete: 'cascade' }),
-		preset_id: integer('preset_id').references(() => prompt_presets.id, {
-			onDelete: 'set null'
-		}),
 		input_hash: text('input_hash').notNull(),
 		model_id: text('model_id').notNull(),
-		preset_snapshot: text('preset_snapshot', { mode: 'json' }).$type<Record<string, unknown>>(),
 		raw_output: text('raw_output'),
 		parsed_result: text('parsed_result', { mode: 'json' }).$type<unknown>(),
 		status: text('status', {
@@ -171,9 +160,8 @@ export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Post = typeof posts.$inferSelect;
 export type NewPost = typeof posts.$inferInsert;
-export type Category = typeof categories.$inferSelect;
-export type Tag = typeof tags.$inferSelect;
-export type PromptPreset = typeof prompt_presets.$inferSelect;
-export type NewPromptPreset = typeof prompt_presets.$inferInsert;
+export type PostResearchSource = typeof post_research_sources.$inferSelect;
+export type PromptSlide = typeof prompt_slides.$inferSelect;
+export type ProviderVariant = typeof provider_variants.$inferSelect;
 export type GenerationAttempt = typeof generation_attempts.$inferSelect;
 export type NewGenerationAttempt = typeof generation_attempts.$inferInsert;

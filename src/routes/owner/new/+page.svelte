@@ -90,7 +90,9 @@
 						required
 						class="font-mono"
 					/>
-					<Field.FieldDescription>Maks 200 karakter. Akan jadi judul carousel.</Field.FieldDescription>
+					<Field.FieldDescription
+						>Maks 200 karakter. Akan jadi judul carousel.</Field.FieldDescription
+					>
 				</Field.Field>
 
 				<div class="grid gap-6 sm:grid-cols-2">
@@ -150,7 +152,9 @@
 						rows={3}
 						maxlength={300}
 					/>
-					<Field.FieldDescription>Maks 300 karakter. Akan tampil di public feed.</Field.FieldDescription>
+					<Field.FieldDescription
+						>Maks 300 karakter. Akan tampil di public feed.</Field.FieldDescription
+					>
 				</Field.Field>
 
 				{#if error}

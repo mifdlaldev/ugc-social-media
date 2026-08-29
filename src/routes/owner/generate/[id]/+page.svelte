@@ -150,8 +150,11 @@
 					{@const variant = getVariantsForSlide(slide.id, currentProvider)}
 					{#if variant}
 						<div class="mb-4">
-							<h3 class="text-caption text-text-muted mb-1">Prompt ({providerLabel(variant.provider)})</h3>
-							<pre class="bg-bg-secondary text-text-primary overflow-x-auto rounded-lg p-4 font-mono text-sm whitespace-pre-wrap">{variant.prompt_text}</pre>
+							<h3 class="text-caption text-text-muted mb-1">
+								Prompt ({providerLabel(variant.provider)})
+							</h3>
+							<pre
+								class="bg-bg-secondary text-text-primary overflow-x-auto rounded-lg p-4 font-mono text-sm whitespace-pre-wrap">{variant.prompt_text}</pre>
 						</div>
 
 						<div class="grid gap-4 sm:grid-cols-2">
@@ -169,7 +172,8 @@
 							<Button
 								variant="outline"
 								size="sm"
-								onclick={() => copyText(variant.prompt_text, `slide-${slide.id}-${variant.provider}`)}
+								onclick={() =>
+									copyText(variant.prompt_text, `slide-${slide.id}-${variant.provider}`)}
 							>
 								{copiedId === `slide-${slide.id}-${variant.provider}` ? 'Tersalin!' : 'Copy Prompt'}
 							</Button>
@@ -182,7 +186,9 @@
 		{/if}
 
 		<div class="flex justify-between">
-			<Button variant="ghost" onclick={() => goto(`/owner/edit/${post.id}`)}>← Kembali ke Riset</Button>
+			<Button variant="ghost" onclick={() => goto(`/owner/edit/${post.id}`)}
+				>← Kembali ke Riset</Button
+			>
 			<Button onclick={() => goto('/owner')}>Selesai →</Button>
 		</div>
 	{/if}

@@ -86,11 +86,7 @@
 								</div>
 							</div>
 							<div class="flex flex-col gap-2">
-								<Button
-									variant="outline"
-									size="sm"
-									onclick={() => goto(`/owner/edit/${post.id}`)}
-								>
+								<Button variant="outline" size="sm" onclick={() => goto(`/owner/edit/${post.id}`)}>
 									Edit
 								</Button>
 								<Button

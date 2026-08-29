@@ -133,9 +133,7 @@
 		{/if}
 
 		<div class="flex justify-end">
-			<Button onclick={approveResearch} size="lg">
-				Approve & Generate
-			</Button>
+			<Button onclick={approveResearch} size="lg">Approve & Generate</Button>
 		</div>
 	{/if}
 </div>

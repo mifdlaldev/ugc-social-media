@@ -27,10 +27,7 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 		.from(post_research_sources)
 		.where(eq(post_research_sources.post_id, post.id));
 
-	const slides = await db
-		.select()
-		.from(prompt_slides)
-		.where(eq(prompt_slides.post_id, post.id));
+	const slides = await db.select().from(prompt_slides).where(eq(prompt_slides.post_id, post.id));
 
 	const slideIds = slides.map((s) => s.id);
 	const variants =
@@ -84,9 +81,7 @@ export const actions: Actions = {
 
 			if (oldSlides.length > 0) {
 				const oldIds = oldSlides.map((s) => s.id);
-				await db
-					.delete(provider_variants)
-					.where(inArray(provider_variants.slide_id, oldIds));
+				await db.delete(provider_variants).where(inArray(provider_variants.slide_id, oldIds));
 			}
 			await db.delete(prompt_slides).where(eq(prompt_slides.post_id, postId));
 

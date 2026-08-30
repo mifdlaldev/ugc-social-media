@@ -4,16 +4,17 @@
 	import { Textarea } from '$lib/components/ui/textarea';
 	import { Alert, AlertDescription, AlertTitle } from '$lib/components/ui/alert';
 
-	/**
-	 * "Continue to Generate" is the existing "Approve & Generate" button on the edit
-	 * page, which is gated on a non-empty style lock. This panel owns generate, save,
-	 * and regenerate only.
-	 */
 	let {
 		postId,
 		initialStyleLock,
-		canGenerate
-	}: { postId: string; initialStyleLock: string; canGenerate: boolean } = $props();
+		canGenerate,
+		onChange
+	}: {
+		postId: string;
+		initialStyleLock: string;
+		canGenerate: boolean;
+		onChange: (styleLock: string) => void;
+	} = $props();
 
 	// svelte-ignore state_referenced_locally
 	let text = $state(initialStyleLock);
@@ -44,6 +45,7 @@
 			}
 			text = payload.style_lock;
 			saved = payload.style_lock;
+			onChange(payload.style_lock);
 			notice = replace ? 'Style lock dibuat ulang.' : 'Style lock dibuat.';
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Terjadi kesalahan';
@@ -73,6 +75,7 @@
 			}
 			text = payload.style_lock;
 			saved = payload.style_lock;
+			onChange(payload.style_lock);
 			notice = 'Style lock disimpan.';
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Terjadi kesalahan';

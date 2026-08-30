@@ -12,7 +12,12 @@
 
 	let post = $derived(data.post);
 	let sources = $derived(data.sources);
-	let styleLock = $derived(data.styleLock);
+	/**
+	 * The panel can create or edit the style lock without a page reload, so the
+	 * approve gate reads this local value and falls back to what the server loaded.
+	 */
+	let localStyleLock = $state<string | null>(null);
+	let styleLock = $derived(localStyleLock ?? data.styleLock);
 	let researching = $state(false);
 	let approveError = $state('');
 
@@ -113,7 +118,12 @@
 		</Card.Content>
 	</Card.Root>
 
-	<StyleLockPanel postId={post.id} initialStyleLock={styleLock} canGenerate={sources.length > 0} />
+	<StyleLockPanel
+		postId={post.id}
+		initialStyleLock={data.styleLock}
+		canGenerate={sources.length > 0}
+		onChange={(value) => (localStyleLock = value)}
+	/>
 
 	{#if sources.length > 0}
 		<section class="mb-6">

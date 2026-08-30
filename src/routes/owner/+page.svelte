@@ -65,6 +65,30 @@
 		posts.filter((p) => (statusTab === 'all' || p.post_status === statusTab) && matchesDate(p))
 	);
 
+	let pageSize = $state('20');
+	let page = $state(1);
+
+	const pageSizeOptions = [
+		{ value: '10', label: '10 per halaman' },
+		{ value: '20', label: '20 per halaman' },
+		{ value: '50', label: '50 per halaman' },
+		{ value: '100', label: '100 per halaman' }
+	] as const;
+
+	let perPage = $derived(Number(pageSize));
+	let totalPages = $derived(Math.max(1, Math.ceil(visiblePosts.length / perPage)));
+	let currentPage = $derived(Math.min(page, totalPages));
+	let pagedPosts = $derived(
+		visiblePosts.slice((currentPage - 1) * perPage, currentPage * perPage)
+	);
+	let rangeStart = $derived(visiblePosts.length === 0 ? 0 : (currentPage - 1) * perPage + 1);
+	let rangeEnd = $derived(Math.min(currentPage * perPage, visiblePosts.length));
+
+	/** Any filter or page-size change should send the user back to the first page. */
+	function resetPage() {
+		page = 1;
+	}
+
 	let draftCount = $derived(posts.filter((p) => p.post_status === 'draft').length);
 	let postedCount = $derived(posts.filter((p) => p.post_status === 'posted').length);
 
@@ -144,7 +168,10 @@
 				<Button
 					variant={statusTab === tab.id ? 'default' : 'ghost'}
 					size="sm"
-					onclick={() => (statusTab = tab.id)}
+					onclick={() => {
+						statusTab = tab.id;
+						resetPage();
+					}}
 				>
 					{tab.label}
 					<span class="ml-1 font-mono text-xs opacity-70">{tabCount(tab.id)}</span>
@@ -153,7 +180,7 @@
 		</div>
 
 		<div class="w-48">
-			<Select.Root type="single" bind:value={dateFilter}>
+			<Select.Root type="single" bind:value={dateFilter} onValueChange={resetPage}>
 				<Select.Trigger>
 					{dateOptions.find((o) => o.value === dateFilter)?.label ?? 'Semua tanggal'}
 				</Select.Trigger>
@@ -180,7 +207,7 @@
 		</Card.Root>
 	{:else}
 		<div class="grid gap-4">
-			{#each visiblePosts as post (post.id)}
+			{#each pagedPosts as post (post.id)}
 				<Card.Root class="hover-lift transition-base">
 					<Card.Content class="p-6">
 						<div class="flex items-start justify-between gap-4">
@@ -240,6 +267,53 @@
 					</Card.Content>
 				</Card.Root>
 			{/each}
+		</div>
+
+		<div
+			class="border-border mt-6 flex flex-wrap items-center justify-between gap-4 border-t pt-6"
+		>
+			<p class="text-text-muted font-mono text-xs">
+				{rangeStart}–{rangeEnd} dari {visiblePosts.length} post
+			</p>
+
+			<div class="flex items-center gap-4">
+				<div class="w-44">
+					<Select.Root type="single" bind:value={pageSize} onValueChange={resetPage}>
+						<Select.Trigger>
+							{pageSizeOptions.find((o) => o.value === pageSize)?.label ?? '20 per halaman'}
+						</Select.Trigger>
+						<Select.Content>
+							{#each pageSizeOptions as option (option.value)}
+								<Select.Item value={option.value} label={option.label} />
+							{/each}
+						</Select.Content>
+					</Select.Root>
+				</div>
+
+				{#if totalPages > 1}
+					<div class="flex items-center gap-2">
+						<Button
+							variant="outline"
+							size="sm"
+							disabled={currentPage === 1}
+							onclick={() => (page = currentPage - 1)}
+						>
+							←
+						</Button>
+						<span class="text-text-secondary font-mono text-sm">
+							{currentPage} / {totalPages}
+						</span>
+						<Button
+							variant="outline"
+							size="sm"
+							disabled={currentPage === totalPages}
+							onclick={() => (page = currentPage + 1)}
+						>
+							→
+						</Button>
+					</div>
+				{/if}
+			</div>
 		</div>
 	{/if}
 </div>

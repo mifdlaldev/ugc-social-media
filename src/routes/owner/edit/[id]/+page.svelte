@@ -72,7 +72,12 @@
 				<Badge variant="outline">{post.slide_count} slides</Badge>
 			</div>
 		</div>
-		<Button variant="ghost" onclick={() => goto('/owner')}>Kembali</Button>
+		<div class="flex gap-2">
+			<Button variant="outline" onclick={() => goto(`/owner/edit/${post.id}/detail`)}>
+				Ubah Detail
+			</Button>
+			<Button variant="ghost" onclick={() => goto('/owner')}>Kembali</Button>
+		</div>
 	</header>
 
 	<Card.Root class="mb-6">

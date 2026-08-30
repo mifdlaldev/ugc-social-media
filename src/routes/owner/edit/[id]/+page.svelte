@@ -4,9 +4,9 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { Alert, AlertDescription, AlertTitle } from '$lib/components/ui/alert';
 	import { goto } from '$app/navigation';
-	import type { PageData, ActionData } from './$types';
+	import type { PageData } from './$types';
 
-	let { data, form }: { data: PageData; form: ActionData } = $props();
+	let { data }: { data: PageData } = $props();
 
 	let post = $derived(data.post);
 	let sources = $derived(data.sources);
@@ -62,11 +62,11 @@
 <div class="mx-auto max-w-4xl px-6 py-12">
 	<header class="mb-8 flex items-end justify-between gap-4">
 		<div class="min-w-0 flex-1">
-			<div class="text-text-muted mb-2 flex items-center gap-2 font-mono text-xs">
+			<div class="mb-2 flex items-center gap-2 font-mono text-xs text-text-muted">
 				<span>#{post.id}</span>
 			</div>
-			<h1 class="text-display text-foreground truncate font-mono">{post.topic}</h1>
-			<div class="text-text-secondary mt-3 flex flex-wrap items-center gap-2">
+			<h1 class="text-display truncate font-mono text-foreground">{post.topic}</h1>
+			<div class="mt-3 flex flex-wrap items-center gap-2 text-text-secondary">
 				<Badge variant="secondary">{post.platform}</Badge>
 				<Badge variant="outline">{post.tone}</Badge>
 				<Badge variant="outline">{post.slide_count} slides</Badge>
@@ -88,7 +88,7 @@
 			</Card.Description>
 		</Card.Header>
 		<Card.Content class="flex items-center justify-between gap-4">
-			<p class="text-text-secondary text-sm">
+			<p class="text-sm text-text-secondary">
 				{sources.length === 0
 					? 'Belum ada riset. Klik tombol untuk mulai.'
 					: `${sources.length} sumber tersimpan.`}
@@ -101,22 +101,22 @@
 
 	{#if sources.length > 0}
 		<section class="mb-6">
-			<h2 class="text-h2 text-foreground mb-4">Hasil Riset</h2>
+			<h2 class="text-h2 mb-4 text-foreground">Hasil Riset</h2>
 			<div class="grid gap-3">
 				{#each sources as source (source.id)}
 					<Card.Root class="hover-lift transition-base">
 						<Card.Content class="p-5">
-							<h3 class="text-h3 text-foreground mb-2 line-clamp-1">
+							<h3 class="text-h3 mb-2 line-clamp-1 text-foreground">
 								{source.source_title ?? 'Tanpa judul'}
 							</h3>
-							<p class="text-text-secondary mb-3 text-sm">
+							<p class="mb-3 text-sm text-text-secondary">
 								{truncateSnippet(source.source_snippet)}
 							</p>
 							<a
 								href={source.source_url}
 								target="_blank"
 								rel="noopener noreferrer"
-								class="text-accent font-mono text-xs hover:underline"
+								class="font-mono text-xs text-accent hover:underline"
 							>
 								{source.source_url}
 							</a>

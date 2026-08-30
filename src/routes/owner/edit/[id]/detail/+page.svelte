@@ -85,9 +85,9 @@
 <div class="mx-auto max-w-3xl px-6 py-12">
 	<header class="mb-8">
 		<h1 class="text-display text-foreground">Ubah Detail Post</h1>
-		<p class="text-text-secondary mt-2">
-			Perbarui topik, platform, tone, jumlah slide, atau ringkasan. Hasil riset dan prompt yang sudah
-			ada tidak dihapus.
+		<p class="mt-2 text-text-secondary">
+			Perbarui topik, platform, tone, jumlah slide, atau ringkasan. Hasil riset dan prompt yang
+			sudah ada tidak dihapus.
 		</p>
 	</header>
 
@@ -148,7 +148,7 @@
 							max="7"
 							step="1"
 							bind:value={slideCount}
-							class="accent-accent flex-1"
+							class="flex-1 accent-accent"
 						/>
 						<Badge variant="default" class="font-mono">{slideCount} slides</Badge>
 					</div>
@@ -173,15 +173,11 @@
 				</Field.Field>
 
 				{#if error}
-					<p class="text-error text-sm">{error}</p>
+					<p class="text-sm text-error">{error}</p>
 				{/if}
 
 				<div class="flex justify-end gap-2">
-					<Button
-						type="button"
-						variant="ghost"
-						onclick={() => goto(`/owner/edit/${initial.id}`)}
-					>
+					<Button type="button" variant="ghost" onclick={() => goto(`/owner/edit/${initial.id}`)}>
 						Batal
 					</Button>
 					<Button type="submit" disabled={loading}>

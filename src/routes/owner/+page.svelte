@@ -79,9 +79,7 @@
 	let perPage = $derived(Number(pageSize));
 	let totalPages = $derived(Math.max(1, Math.ceil(visiblePosts.length / perPage)));
 	let currentPage = $derived(Math.min(page, totalPages));
-	let pagedPosts = $derived(
-		visiblePosts.slice((currentPage - 1) * perPage, currentPage * perPage)
-	);
+	let pagedPosts = $derived(visiblePosts.slice((currentPage - 1) * perPage, currentPage * perPage));
 	let rangeStart = $derived(visiblePosts.length === 0 ? 0 : (currentPage - 1) * perPage + 1);
 	let rangeEnd = $derived(Math.min(currentPage * perPage, visiblePosts.length));
 
@@ -159,7 +157,7 @@
 	<header class="mb-8 flex items-end justify-between gap-4">
 		<div>
 			<h1 class="text-display text-foreground">Workspace Owner</h1>
-			<p class="text-text-secondary mt-2">Kelola post social media Anda.</p>
+			<p class="mt-2 text-text-secondary">Kelola post social media Anda.</p>
 		</div>
 		<Button onclick={() => goto('/owner/new')}>
 			<span class="font-mono">+</span>
@@ -167,7 +165,7 @@
 		</Button>
 	</header>
 
-	<div class="border-border mb-6 flex flex-wrap items-center justify-between gap-4 border-b pb-4">
+	<div class="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-border pb-4">
 		<div class="flex gap-1">
 			{#each statusTabs as tab (tab.id)}
 				<Button
@@ -201,13 +199,13 @@
 	{#if posts.length === 0}
 		<Card.Root>
 			<Card.Content class="py-16 text-center">
-				<p class="text-text-muted text-caption">Belum ada post. Klik "+ Post Baru" untuk mulai.</p>
+				<p class="text-caption text-text-muted">Belum ada post. Klik "+ Post Baru" untuk mulai.</p>
 			</Card.Content>
 		</Card.Root>
 	{:else if visiblePosts.length === 0}
 		<Card.Root>
 			<Card.Content class="py-16 text-center">
-				<p class="text-text-muted text-caption">Tidak ada post yang cocok dengan filter ini.</p>
+				<p class="text-caption text-text-muted">Tidak ada post yang cocok dengan filter ini.</p>
 			</Card.Content>
 		</Card.Root>
 	{:else}
@@ -217,13 +215,13 @@
 					<Card.Content class="p-6">
 						<div class="flex items-start justify-between gap-4">
 							<div class="min-w-0 flex-1">
-								<div class="text-text-muted mb-2 flex items-center gap-2 font-mono text-xs">
+								<div class="mb-2 flex items-center gap-2 font-mono text-xs text-text-muted">
 									<span>{shortId(post.id)}</span>
 									<span>·</span>
 									<span>{formatDate(post.created_at)}</span>
 								</div>
-								<h3 class="text-h3 text-foreground mb-2 truncate font-mono">{post.topic}</h3>
-								<div class="text-text-secondary mb-3 line-clamp-2 text-sm">
+								<h3 class="text-h3 mb-2 truncate font-mono text-foreground">{post.topic}</h3>
+								<div class="mb-3 line-clamp-2 text-sm text-text-secondary">
 									{post.excerpt ?? '—'}
 								</div>
 								<div class="flex flex-wrap items-center gap-2">
@@ -234,7 +232,7 @@
 									<Badge variant="outline">{post.tone}</Badge>
 									<Badge variant="outline">{post.slide_count} slides</Badge>
 									{#if post.posted_at}
-										<span class="text-text-muted font-mono text-xs">
+										<span class="font-mono text-xs text-text-muted">
 											diposting {formatDate(post.posted_at)}
 										</span>
 									{/if}
@@ -274,10 +272,8 @@
 			{/each}
 		</div>
 
-		<div
-			class="border-border mt-6 flex flex-wrap items-center justify-between gap-4 border-t pt-6"
-		>
-			<p class="text-text-muted font-mono text-xs">
+		<div class="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-6">
+			<p class="font-mono text-xs text-text-muted">
 				{rangeStart}–{rangeEnd} dari {visiblePosts.length} post
 			</p>
 
@@ -305,7 +301,7 @@
 						>
 							←
 						</Button>
-						<span class="text-text-secondary font-mono text-sm">
+						<span class="font-mono text-sm text-text-secondary">
 							{currentPage} / {totalPages}
 						</span>
 						<Button
@@ -334,9 +330,8 @@
 			<AlertDialog.Title>Hapus post ini?</AlertDialog.Title>
 			<AlertDialog.Description>
 				{#if pendingDelete}
-					<span class="text-foreground font-mono">{pendingDelete.topic}</span> akan dihapus
-					permanen, beserta hasil riset dan seluruh prompt yang sudah digenerate. Tindakan ini tidak
-					bisa dibatalkan.
+					<span class="font-mono text-foreground">{pendingDelete.topic}</span> akan dihapus permanen,
+					beserta hasil riset dan seluruh prompt yang sudah digenerate. Tindakan ini tidak bisa dibatalkan.
 				{/if}
 			</AlertDialog.Description>
 		</AlertDialog.Header>

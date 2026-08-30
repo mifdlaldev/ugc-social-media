@@ -2,11 +2,10 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
-	import { Alert, AlertDescription, AlertTitle } from '$lib/components/ui/alert';
 	import { goto } from '$app/navigation';
-	import type { PageData, ActionData } from './$types';
+	import type { PageData } from './$types';
 
-	let { data, form }: { data: PageData; form: ActionData } = $props();
+	let { data }: { data: PageData } = $props();
 
 	let post = $derived(data.post);
 	let slides = $derived(data.slides);
@@ -61,11 +60,11 @@
 <div class="mx-auto max-w-5xl px-6 py-12">
 	<header class="mb-8 flex items-end justify-between gap-4">
 		<div class="min-w-0 flex-1">
-			<div class="text-text-muted mb-2 flex items-center gap-2 font-mono text-xs">
+			<div class="mb-2 flex items-center gap-2 font-mono text-xs text-text-muted">
 				<span>#{post.id}</span>
 			</div>
-			<h1 class="text-display text-foreground truncate font-mono">{post.topic}</h1>
-			<div class="text-text-secondary mt-3 flex flex-wrap items-center gap-2">
+			<h1 class="text-display truncate font-mono text-foreground">{post.topic}</h1>
+			<div class="mt-3 flex flex-wrap items-center gap-2 text-text-secondary">
 				<Badge variant="secondary">{post.platform}</Badge>
 				<Badge variant="outline">{post.tone}</Badge>
 				<Badge variant="outline">{post.slide_count} slides</Badge>
@@ -80,7 +79,7 @@
 	{#if slides.length === 0}
 		<Card.Root class="mb-6">
 			<Card.Content class="py-16 text-center">
-				<p class="text-text-muted text-caption mb-4">Belum ada prompt yang digenerate.</p>
+				<p class="text-caption mb-4 text-text-muted">Belum ada prompt yang digenerate.</p>
 				<Button onclick={runGenerate} disabled={generating} size="lg">
 					{generating ? 'Generating...' : 'Generate Prompt'}
 				</Button>
@@ -97,7 +96,7 @@
 				>
 					←
 				</Button>
-				<span class="text-text-secondary font-mono text-sm">
+				<span class="font-mono text-sm text-text-secondary">
 					Slide {currentSlide + 1} / {slides.length}
 				</span>
 				<Button
@@ -125,11 +124,11 @@
 				</Card.Header>
 				<Card.Content>
 					<div class="mb-4">
-						<h3 class="text-caption text-text-muted mb-1">Research Context</h3>
-						<p class="text-text-secondary text-sm">{slide.research_context}</p>
+						<h3 class="text-caption mb-1 text-text-muted">Research Context</h3>
+						<p class="text-sm text-text-secondary">{slide.research_context}</p>
 					</div>
 
-					<div class="border-border mb-4 border-b pb-4">
+					<div class="mb-4 border-b border-border pb-4">
 						<div class="flex gap-1">
 							{#each providers as p (p.id)}
 								<Button
@@ -146,21 +145,21 @@
 					{@const variant = getVariantsForSlide(slide.id, currentProvider)}
 					{#if variant}
 						<div class="mb-4">
-							<h3 class="text-caption text-text-muted mb-1">
+							<h3 class="text-caption mb-1 text-text-muted">
 								Prompt ({providerLabel(variant.provider)})
 							</h3>
 							<pre
-								class="bg-bg-secondary text-text-primary overflow-x-auto rounded-lg p-4 font-mono text-sm whitespace-pre-wrap">{variant.prompt_text}</pre>
+								class="overflow-x-auto rounded-lg bg-bg-secondary p-4 font-mono text-sm whitespace-pre-wrap text-text-primary">{variant.prompt_text}</pre>
 						</div>
 
 						<div class="grid gap-4 sm:grid-cols-2">
 							<div>
-								<h3 class="text-caption text-text-muted mb-1">Visual Notes</h3>
-								<p class="text-text-secondary text-sm">{variant.visual_notes}</p>
+								<h3 class="text-caption mb-1 text-text-muted">Visual Notes</h3>
+								<p class="text-sm text-text-secondary">{variant.visual_notes}</p>
 							</div>
 							<div>
-								<h3 class="text-caption text-text-muted mb-1">On-Image Text</h3>
-								<p class="text-text-primary font-mono text-sm">{variant.on_image_text}</p>
+								<h3 class="text-caption mb-1 text-text-muted">On-Image Text</h3>
+								<p class="font-mono text-sm text-text-primary">{variant.on_image_text}</p>
 							</div>
 						</div>
 
@@ -175,7 +174,7 @@
 							</Button>
 						</div>
 					{:else}
-						<p class="text-text-muted text-sm">Variant tidak ditemukan.</p>
+						<p class="text-sm text-text-muted">Variant tidak ditemukan.</p>
 					{/if}
 				</Card.Content>
 			</Card.Root>

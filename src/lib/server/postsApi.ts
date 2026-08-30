@@ -1,5 +1,5 @@
 import { Elysia, t } from 'elysia';
-import { eq, inArray, sql } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { requireOwner } from './auth';
 import { db } from './db';
 import {
@@ -149,9 +149,7 @@ export const postsApi = new Elysia({ prefix: '/api' })
 		}
 		try {
 			const research = await compileResearch(post.topic);
-			await db
-				.delete(post_research_sources)
-				.where(eq(post_research_sources.post_id, post.id));
+			await db.delete(post_research_sources).where(eq(post_research_sources.post_id, post.id));
 			for (const source of research.sources) {
 				await db.insert(post_research_sources).values({
 					post_id: post.id,
@@ -204,7 +202,10 @@ export const postsApi = new Elysia({ prefix: '/api' })
 			return { success: false, error: 'No research sources' };
 		}
 		const researchBrief = sources
-			.map((s, i) => `[${i + 1}] ${s.source_title ?? ''}\n${s.source_snippet ?? ''}\nURL: ${s.source_url}`)
+			.map(
+				(s, i) =>
+					`[${i + 1}] ${s.source_title ?? ''}\n${s.source_snippet ?? ''}\nURL: ${s.source_url}`
+			)
 			.join('\n\n');
 		try {
 			const result = await generateSlides(
@@ -268,10 +269,7 @@ export const postsApi = new Elysia({ prefix: '/api' })
 	})
 	.get('/posts/:id/slides', async ({ params, set }) => {
 		const postId = params.id;
-		const slides = await db
-			.select()
-			.from(prompt_slides)
-			.where(eq(prompt_slides.post_id, postId));
+		const slides = await db.select().from(prompt_slides).where(eq(prompt_slides.post_id, postId));
 		if (slides.length === 0) {
 			set.status = 200;
 			return { slides: [], variants: [] };
@@ -284,4 +282,3 @@ export const postsApi = new Elysia({ prefix: '/api' })
 		set.status = 200;
 		return { slides, variants };
 	});
-

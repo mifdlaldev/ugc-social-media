@@ -27,7 +27,9 @@ const ASPECT_BY_PLATFORM: Record<string, AspectRatio> = {
 };
 
 const PROVIDER_TEMPLATES: Record<Provider, (ctx: SlideContext) => string> = {
-	'gpt-image': (ctx) => `Create an infographic for ${ctx.platform} carousel (slide ${ctx.slide_index + 1} of ${ctx.slideCount}).
+	'gpt-image': (
+		ctx
+	) => `Create an infographic for ${ctx.platform} carousel (slide ${ctx.slide_index + 1} of ${ctx.slideCount}).
 Topic: ${ctx.topic}
 Slide type: ${ctx.slide_type}
 Slide title: ${ctx.slide_title}
@@ -46,7 +48,7 @@ Subtle text overlay: "${ctx.onImageText}" (minimal, let the image breathe)
 Composition: ${ctx.aspectRatio}, vertical or square
 High quality, professional photography or 3D render style. Cinematic lighting.`,
 
-	'recraft': (ctx) => `Vector-style illustration infographic for ${ctx.platform} post.
+	recraft: (ctx) => `Vector-style illustration infographic for ${ctx.platform} post.
 Topic: ${ctx.topic}
 Style: consistent brand illustration, icon-based, flat design
 Elements: ${ctx.visualNotes}
@@ -99,13 +101,7 @@ export async function generateSlides(
 	tone: string,
 	slideCount: number
 ): Promise<GenerateResult> {
-	const synthesis = await synthesizeBriefs(
-		topic,
-		researchBrief,
-		platform,
-		tone,
-		slideCount
-	);
+	const synthesis = await synthesizeBriefs(topic, researchBrief, platform, tone, slideCount);
 
 	const aspectRatio = ASPECT_BY_PLATFORM[platform] ?? '1:1';
 	const slides: GeneratedSlide[] = [];
@@ -130,15 +126,15 @@ export async function generateSlides(
 		ctx.visualNotes = visualData.visual_notes;
 		ctx.onImageText = visualData.on_image_text;
 
-		const variants: ProviderVariant[] = (
-			['gpt-image', 'nano-banana', 'recraft'] as Provider[]
-		).map((provider) => ({
-			provider,
-			prompt_text: PROVIDER_TEMPLATES[provider](ctx),
-			visual_notes: visualData.visual_notes,
-			on_image_text: visualData.on_image_text,
-			aspect_ratio: aspectRatio
-		}));
+		const variants: ProviderVariant[] = (['gpt-image', 'nano-banana', 'recraft'] as Provider[]).map(
+			(provider) => ({
+				provider,
+				prompt_text: PROVIDER_TEMPLATES[provider](ctx),
+				visual_notes: visualData.visual_notes,
+				on_image_text: visualData.on_image_text,
+				aspect_ratio: aspectRatio
+			})
+		);
 
 		slides.push({
 			slide_index: brief.slide_index,

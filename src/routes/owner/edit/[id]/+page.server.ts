@@ -22,7 +22,7 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 };
 
 export const actions: Actions = {
-	research: async ({ params, request }) => {
+	research: async ({ params }) => {
 		const postId = params.id;
 		const post = await getOwnerPostById(postId);
 		if (!post) {

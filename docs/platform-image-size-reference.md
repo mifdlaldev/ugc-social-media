@@ -7,29 +7,29 @@
 
 ## Source status vocabulary
 
-| Status | Meaning |
-| --- | --- |
-| `official` | Dimensions, ratio, and limits come from the platform's own documentation. |
+| Status                          | Meaning                                                                                                                                                                                            |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `official`                      | Dimensions, ratio, and limits come from the platform's own documentation.                                                                                                                          |
 | `official-ratio-derived-canvas` | The platform officially documents the ratio and/or a width or file limit, but not the exact pixel canvas. The canvas is a third-party production recommendation consistent with the official rule. |
-| `official-ads-doc` | The figure comes from the platform's own documentation, but from its **advertising** specs rather than organic posting specs. |
+| `official-ads-doc`              | The figure comes from the platform's own documentation, but from its **advertising** specs rather than organic posting specs.                                                                      |
 
 ## Included placements (13)
 
-| Value | Platform | Placement | Canvas | Ratio | Documented file limit | Source status | Source |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| `instagram-feed-square` | Instagram | Feed — Square | 1080 × 1080 | 1:1 | 8 MB (third-party) | `official-ratio-derived-canvas` | [Instagram Help][ig], [Buffer][buf-help] |
-| `instagram-feed-portrait` | Instagram | Feed — Portrait | 1080 × 1350 | 4:5 | 8 MB (third-party) | `official-ratio-derived-canvas` | [Instagram Help][ig], [Buffer][buf-help] |
-| `instagram-feed-landscape` | Instagram | Feed — Landscape | 1080 × 566 | 1.91:1 | 8 MB (third-party) | `official-ratio-derived-canvas` | [Instagram Help][ig], [Buffer][buf-help] |
-| `instagram-stories` | Instagram | Stories | 1080 × 1920 | 9:16 | 30 MB (ads doc) | `official-ads-doc` | [Meta Stories Ads][meta-stories] |
-| `facebook-feed-square` | Facebook | Feed — Square | 1080 × 1080 | 1:1 | not documented for organic posts | `official-ratio-derived-canvas` | [Meta placement pixel requirements][meta-px], [Dash Social][dash] |
-| `facebook-feed-portrait` | Facebook | Feed — Portrait | 1080 × 1350 | 4:5 | not documented for organic posts | `official-ratio-derived-canvas` | [Meta placement pixel requirements][meta-px], [Dash Social][dash] |
-| `facebook-stories` | Facebook | Stories | 1080 × 1920 | 9:16 | 30 MB (ads doc) | `official-ads-doc` | [Meta Stories Ads][meta-stories] |
-| `x-instream-single-image` | X | In-stream single image | 1200 × 675 | 16:9 | 5 MB native; 20 MB Media Studio | `official-ratio-derived-canvas` | [X Help — posting pictures][x-post], [X Help — Media Studio][x-ms], [Buffer][buf] |
-| `youtube-community-image` | YouTube | Community post image | 1080 × 1080 | 1:1 | 16 MB | `official-ratio-derived-canvas` | [YouTube Help — Create a post][yt-post] |
-| `linkedin-single-image-portrait` | LinkedIn | Single image — Portrait | 1080 × 1350 | 4:5 | 5 MB | `official-ratio-derived-canvas` | [LinkedIn Help — Share photos][li] |
-| `linkedin-single-image-square` | LinkedIn | Single image — Square | 1080 × 1080 | 1:1 | 5 MB | `official-ratio-derived-canvas` | [LinkedIn Help — Share photos][li] |
-| `linkedin-single-image-landscape` | LinkedIn | Single image — Landscape | 1200 × 628 | 1.91:1 | 5 MB | `official-ratio-derived-canvas` | [LinkedIn Help — Share photos][li] |
-| `pinterest-standard-pin` | Pinterest | Standard Pin | 1000 × 1500 | 2:3 | 20 MB desktop; 32 MB in-app | `official` | [Pinterest product specs][pin] |
+| Value                             | Platform  | Placement                | Canvas      | Ratio  | Documented file limit            | Source status                   | Source                                                                            |
+| --------------------------------- | --------- | ------------------------ | ----------- | ------ | -------------------------------- | ------------------------------- | --------------------------------------------------------------------------------- |
+| `instagram-feed-square`           | Instagram | Feed — Square            | 1080 × 1080 | 1:1    | 8 MB (third-party)               | `official-ratio-derived-canvas` | [Instagram Help][ig], [Buffer][buf-help]                                          |
+| `instagram-feed-portrait`         | Instagram | Feed — Portrait          | 1080 × 1350 | 4:5    | 8 MB (third-party)               | `official-ratio-derived-canvas` | [Instagram Help][ig], [Buffer][buf-help]                                          |
+| `instagram-feed-landscape`        | Instagram | Feed — Landscape         | 1080 × 566  | 1.91:1 | 8 MB (third-party)               | `official-ratio-derived-canvas` | [Instagram Help][ig], [Buffer][buf-help]                                          |
+| `instagram-stories`               | Instagram | Stories                  | 1080 × 1920 | 9:16   | 30 MB (ads doc)                  | `official-ads-doc`              | [Meta Stories Ads][meta-stories]                                                  |
+| `facebook-feed-square`            | Facebook  | Feed — Square            | 1080 × 1080 | 1:1    | not documented for organic posts | `official-ratio-derived-canvas` | [Meta placement pixel requirements][meta-px], [Dash Social][dash]                 |
+| `facebook-feed-portrait`          | Facebook  | Feed — Portrait          | 1080 × 1350 | 4:5    | not documented for organic posts | `official-ratio-derived-canvas` | [Meta placement pixel requirements][meta-px], [Dash Social][dash]                 |
+| `facebook-stories`                | Facebook  | Stories                  | 1080 × 1920 | 9:16   | 30 MB (ads doc)                  | `official-ads-doc`              | [Meta Stories Ads][meta-stories]                                                  |
+| `x-instream-single-image`         | X         | In-stream single image   | 1200 × 675  | 16:9   | 5 MB native; 20 MB Media Studio  | `official-ratio-derived-canvas` | [X Help — posting pictures][x-post], [X Help — Media Studio][x-ms], [Buffer][buf] |
+| `youtube-community-image`         | YouTube   | Community post image     | 1080 × 1080 | 1:1    | 16 MB                            | `official-ratio-derived-canvas` | [YouTube Help — Create a post][yt-post]                                           |
+| `linkedin-single-image-portrait`  | LinkedIn  | Single image — Portrait  | 1080 × 1350 | 4:5    | 5 MB                             | `official-ratio-derived-canvas` | [LinkedIn Help — Share photos][li]                                                |
+| `linkedin-single-image-square`    | LinkedIn  | Single image — Square    | 1080 × 1080 | 1:1    | 5 MB                             | `official-ratio-derived-canvas` | [LinkedIn Help — Share photos][li]                                                |
+| `linkedin-single-image-landscape` | LinkedIn  | Single image — Landscape | 1200 × 628  | 1.91:1 | 5 MB                             | `official-ratio-derived-canvas` | [LinkedIn Help — Share photos][li]                                                |
+| `pinterest-standard-pin`          | Pinterest | Standard Pin             | 1000 × 1500 | 2:3    | 20 MB desktop; 32 MB in-app      | `official`                      | [Pinterest product specs][pin]                                                    |
 
 ### Officially documented constraints worth keeping visible
 
@@ -42,14 +42,14 @@
 
 ## Excluded placements and the reason
 
-| Platform / placement | Reason for exclusion |
-| --- | --- |
-| Threads feed | No official pixel recommendation found in Threads help documentation. |
-| WhatsApp Status | No official canvas or image file limit found. Official documentation also notes HD media is unavailable for Status. |
-| KASKUS thread image | Official help documents only accepted formats (JPG, PNG, SVG, GIF) and a maximum of 20 images per thread. No dimensions or file-size limit. A 512 KB figure appears only in an old community guide and must not be used. |
-| TikTok photo post | Photo posting and a 35-item editing session are officially confirmed, but no pixel dimensions or organic file limit are documented. |
-| Facebook feed landscape 1200 × 630 | This is a third-party link-preview recommendation, not a documented photo-post specification. |
-| YouTube video thumbnail | Officially specified (1280 × 720, 16:9, min width 640 px), but it is a video thumbnail rather than an image post. Excluded by owner decision. |
+| Platform / placement               | Reason for exclusion                                                                                                                                                                                                     |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Threads feed                       | No official pixel recommendation found in Threads help documentation.                                                                                                                                                    |
+| WhatsApp Status                    | No official canvas or image file limit found. Official documentation also notes HD media is unavailable for Status.                                                                                                      |
+| KASKUS thread image                | Official help documents only accepted formats (JPG, PNG, SVG, GIF) and a maximum of 20 images per thread. No dimensions or file-size limit. A 512 KB figure appears only in an old community guide and must not be used. |
+| TikTok photo post                  | Photo posting and a 35-item editing session are officially confirmed, but no pixel dimensions or organic file limit are documented.                                                                                      |
+| Facebook feed landscape 1200 × 630 | This is a third-party link-preview recommendation, not a documented photo-post specification.                                                                                                                            |
+| YouTube video thumbnail            | Officially specified (1280 × 720, 16:9, min width 640 px), but it is a video thumbnail rather than an image post. Excluded by owner decision.                                                                            |
 
 Re-verify this file before adding any excluded placement. Platform specifications change.
 

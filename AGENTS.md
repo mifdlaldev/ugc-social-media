@@ -167,8 +167,6 @@ Manage via `skills-lock.json` at the project root.
 
 Before changing prompt generation, update the relevant OpenSpec proposal/spec/design/tasks artifacts and obtain approval. The current implementation must not be changed based only on the PDF catalog.
 
-
-
 The prompt-generation service (`src/lib/server/promptGenerator.ts`) is the heart of the product. Requirements:
 
 - Input: article text (+ optional template/preset selected by the user).

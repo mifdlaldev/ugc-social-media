@@ -78,7 +78,7 @@
 <div class="mx-auto max-w-3xl px-6 py-12">
 	<header class="mb-8">
 		<h1 class="text-display text-foreground">Post Baru</h1>
-		<p class="text-text-secondary mt-2">
+		<p class="mt-2 text-text-secondary">
 			Tulis topik social media, pilih platform dan tone. AI akan riset & generate prompt carousel.
 		</p>
 	</header>
@@ -140,7 +140,7 @@
 							max="7"
 							step="1"
 							bind:value={slideCount}
-							class="accent-accent flex-1"
+							class="flex-1 accent-accent"
 						/>
 						<Badge variant="default" class="font-mono">{slideCount} slides</Badge>
 					</div>

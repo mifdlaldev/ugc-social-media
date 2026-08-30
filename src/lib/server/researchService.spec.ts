@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
-import { setPlatformEnv, config } from './config';
+import { setPlatformEnv } from './config';
 import { compileResearch, searchYouCom } from './researchService';
 
 describe('searchYouCom', () => {
@@ -49,7 +49,9 @@ describe('searchYouCom', () => {
 	});
 
 	it('throws on non-OK response', async () => {
-		globalThis.fetch = mock(async () => new Response('error', { status: 500 })) as unknown as typeof fetch;
+		globalThis.fetch = mock(
+			async () => new Response('error', { status: 500 })
+		) as unknown as typeof fetch;
 		await expect(searchYouCom('test')).rejects.toThrow('YOU_SEARCH_FAILED_500');
 		globalThis.fetch = originalFetch;
 	});

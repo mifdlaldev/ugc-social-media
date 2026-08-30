@@ -103,6 +103,32 @@ export const postsApi = new Elysia({ prefix: '/api' })
 			})
 		}
 	)
+	.patch(
+		'/posts/:id/status',
+		async ({ request, params, body, set }) => {
+			await requireOwner(request);
+			const existing = await getOwnerPostById(params.id);
+			if (!existing) {
+				set.status = 404;
+				return { error: 'Post not found' };
+			}
+			const updated = await db
+				.update(posts)
+				.set({
+					post_status: body.post_status,
+					posted_at: body.post_status === 'posted' ? new Date() : null
+				})
+				.where(eq(posts.id, existing.id))
+				.returning();
+			set.status = 200;
+			return updated[0];
+		},
+		{
+			body: t.Object({
+				post_status: t.Enum({ draft: 'draft', posted: 'posted' })
+			})
+		}
+	)
 	.delete('/posts/:id', async ({ request, params, set }) => {
 		await requireOwner(request);
 		const existing = await getOwnerPostById(params.id);

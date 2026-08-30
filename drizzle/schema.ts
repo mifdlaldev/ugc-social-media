@@ -49,6 +49,12 @@ export const posts = sqliteTable(
 			.default('informatif'),
 		slide_count: integer('slide_count').notNull().default(5), // 3-7
 		excerpt: text('excerpt'), // auto-generated from research, max 300 char
+		/** Owner workflow state: has this been published to social media yet? */
+		post_status: text('post_status', { enum: ['draft', 'posted'] })
+			.notNull()
+			.default('draft'),
+		/** When the owner marked it as posted to social media. */
+		posted_at: integer('posted_at', { mode: 'timestamp' }),
 		created_at: integer('created_at', { mode: 'timestamp' })
 			.notNull()
 			.default(sql`(unixepoch())`),
@@ -56,7 +62,11 @@ export const posts = sqliteTable(
 			.notNull()
 			.default(sql`(unixepoch())`)
 	},
-	(table) => [index('posts_author_idx').on(table.author_id)]
+	(table) => [
+		index('posts_author_idx').on(table.author_id),
+		index('posts_status_idx').on(table.post_status),
+		index('posts_created_idx').on(table.created_at)
+	]
 );
 
 // ---- post_research_sources (research results per post) ----

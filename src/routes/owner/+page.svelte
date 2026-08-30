@@ -3,6 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import * as Select from '$lib/components/ui/select';
+	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { goto } from '$app/navigation';
 	import type { PageData } from './$types';
 
@@ -98,16 +99,20 @@
 		return posts.length;
 	}
 
-	async function deletePost(id: string) {
-		if (!confirm('Hapus post ini?')) return;
-		deleting = id;
+	let pendingDelete = $state<Post | null>(null);
+
+	async function confirmDelete() {
+		const target = pendingDelete;
+		if (!target) return;
+		deleting = target.id;
 		try {
-			const res = await fetch(`/api/posts/${id}`, { method: 'DELETE' });
+			const res = await fetch(`/api/posts/${target.id}`, { method: 'DELETE' });
 			if (res.ok) {
-				localPosts = posts.filter((p) => p.id !== id);
+				localPosts = posts.filter((p) => p.id !== target.id);
 			}
 		} finally {
 			deleting = null;
+			pendingDelete = null;
 		}
 	}
 
@@ -258,7 +263,7 @@
 									variant="ghost"
 									size="sm"
 									disabled={deleting === post.id}
-									onclick={() => deletePost(post.id)}
+									onclick={() => (pendingDelete = post)}
 								>
 									{deleting === post.id ? '...' : 'Hapus'}
 								</Button>
@@ -317,3 +322,29 @@
 		</div>
 	{/if}
 </div>
+
+<AlertDialog.Root
+	open={pendingDelete !== null}
+	onOpenChange={(open) => {
+		if (!open) pendingDelete = null;
+	}}
+>
+	<AlertDialog.Content>
+		<AlertDialog.Header>
+			<AlertDialog.Title>Hapus post ini?</AlertDialog.Title>
+			<AlertDialog.Description>
+				{#if pendingDelete}
+					<span class="text-foreground font-mono">{pendingDelete.topic}</span> akan dihapus
+					permanen, beserta hasil riset dan seluruh prompt yang sudah digenerate. Tindakan ini tidak
+					bisa dibatalkan.
+				{/if}
+			</AlertDialog.Description>
+		</AlertDialog.Header>
+		<AlertDialog.Footer>
+			<AlertDialog.Cancel>Batal</AlertDialog.Cancel>
+			<AlertDialog.Action onclick={confirmDelete} disabled={deleting !== null}>
+				{deleting !== null ? 'Menghapus...' : 'Hapus permanen'}
+			</AlertDialog.Action>
+		</AlertDialog.Footer>
+	</AlertDialog.Content>
+</AlertDialog.Root>

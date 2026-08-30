@@ -4,13 +4,15 @@ import { users } from '../../../drizzle/schema';
 export async function seed() {
 	const existing = await db.select().from(users);
 	if (existing.length === 0) {
-		await db.insert(users).values({
-			id: 1,
-			email: 'owner@localhost',
-			password_hash: 'placeholder',
-			role: 'owner'
-		});
-		console.log('[seed] owner user created (id=1)');
+		const [created] = await db
+			.insert(users)
+			.values({
+				email: 'owner@localhost',
+				password_hash: 'placeholder',
+				role: 'owner'
+			})
+			.returning();
+		console.log(`[seed] owner user created (id=${created?.id})`);
 	} else {
 		console.log(`[seed] ${existing.length} user(s) already exist, skipping`);
 	}

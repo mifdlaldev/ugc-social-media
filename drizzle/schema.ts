@@ -1,11 +1,20 @@
 import { sql } from 'drizzle-orm';
-import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { index, sqliteTable, text, integer, uniqueIndex } from 'drizzle-orm/sqlite-core';
+
+/**
+ * All primary keys are UUID v4 strings (not sequential integers) so that
+ * identifiers exposed in URLs are unguessable and never collide.
+ */
+const uuid = () =>
+	text('id')
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID());
 
 // ---- users (single pre-provisioned owner account) ----
 export const users = sqliteTable(
 	'users',
 	{
-		id: integer('id').primaryKey({ autoIncrement: true }),
+		id: uuid(),
 		email: text('email').notNull().unique(),
 		password_hash: text('password_hash').notNull(),
 		role: text('role', { enum: ['owner', 'admin', 'user'] })
@@ -25,8 +34,8 @@ export const users = sqliteTable(
 export const posts = sqliteTable(
 	'posts',
 	{
-		id: integer('id').primaryKey({ autoIncrement: true }),
-		author_id: integer('author_id')
+		id: uuid(),
+		author_id: text('author_id')
 			.notNull()
 			.references(() => users.id, { onDelete: 'restrict' }),
 		topic: text('topic').notNull(), // max 200 char, e.g. "Bata merah vs bata ringan"
@@ -40,29 +49,22 @@ export const posts = sqliteTable(
 			.default('informatif'),
 		slide_count: integer('slide_count').notNull().default(5), // 3-7
 		excerpt: text('excerpt'), // auto-generated from research, max 300 char
-		status: text('status', { enum: ['draft', 'published'] })
-			.notNull()
-			.default('draft'),
 		created_at: integer('created_at', { mode: 'timestamp' })
 			.notNull()
 			.default(sql`(unixepoch())`),
 		updated_at: integer('updated_at', { mode: 'timestamp' })
 			.notNull()
-			.default(sql`(unixepoch())`),
-		published_at: integer('published_at', { mode: 'timestamp' })
+			.default(sql`(unixepoch())`)
 	},
-	(table) => [
-		index('posts_status_idx').on(table.status),
-		index('posts_author_idx').on(table.author_id)
-	]
+	(table) => [index('posts_author_idx').on(table.author_id)]
 );
 
 // ---- post_research_sources (research results per post) ----
 export const post_research_sources = sqliteTable(
 	'post_research_sources',
 	{
-		id: integer('id').primaryKey({ autoIncrement: true }),
-		post_id: integer('post_id')
+		id: uuid(),
+		post_id: text('post_id')
 			.notNull()
 			.references(() => posts.id, { onDelete: 'cascade' }),
 		source_url: text('source_url').notNull(),
@@ -81,8 +83,8 @@ export const post_research_sources = sqliteTable(
 export const prompt_slides = sqliteTable(
 	'prompt_slides',
 	{
-		id: integer('id').primaryKey({ autoIncrement: true }),
-		post_id: integer('post_id')
+		id: uuid(),
+		post_id: text('post_id')
 			.notNull()
 			.references(() => posts.id, { onDelete: 'cascade' }),
 		slide_index: integer('slide_index').notNull(), // 0-based
@@ -107,8 +109,8 @@ export const prompt_slides = sqliteTable(
 export const provider_variants = sqliteTable(
 	'provider_variants',
 	{
-		id: integer('id').primaryKey({ autoIncrement: true }),
-		slide_id: integer('slide_id')
+		id: uuid(),
+		slide_id: text('slide_id')
 			.notNull()
 			.references(() => prompt_slides.id, { onDelete: 'cascade' }),
 		provider: text('provider', { enum: ['gpt-image', 'nano-banana', 'recraft'] }).notNull(),
@@ -132,8 +134,8 @@ export const provider_variants = sqliteTable(
 export const generation_attempts = sqliteTable(
 	'generation_attempts',
 	{
-		id: integer('id').primaryKey({ autoIncrement: true }),
-		post_id: integer('post_id')
+		id: uuid(),
+		post_id: text('post_id')
 			.notNull()
 			.references(() => posts.id, { onDelete: 'cascade' }),
 		input_hash: text('input_hash').notNull(),

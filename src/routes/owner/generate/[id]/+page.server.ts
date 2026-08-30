@@ -17,7 +17,7 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 	if (!locals.session) {
 		throw redirect(302, `/login?next=${encodeURIComponent(url.pathname)}`);
 	}
-	const post = await getOwnerPostById(Number(params.id));
+	const post = await getOwnerPostById(params.id);
 	if (!post) {
 		throw redirect(302, '/owner');
 	}
@@ -43,7 +43,7 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 
 export const actions: Actions = {
 	generate: async ({ params }) => {
-		const postId = Number(params.id);
+		const postId = params.id;
 		const post = await getOwnerPostById(postId);
 		if (!post) {
 			return { success: false, error: 'Post not found' };

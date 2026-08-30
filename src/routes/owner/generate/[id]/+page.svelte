@@ -22,7 +22,7 @@
 		{ id: 'recraft', label: 'Recraft' }
 	] as const;
 
-	function getVariantsForSlide(slideId: number, provider: string) {
+	function getVariantsForSlide(slideId: string, provider: string) {
 		return variants.find((v) => v.slide_id === slideId && v.provider === provider);
 	}
 

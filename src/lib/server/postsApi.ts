@@ -9,7 +9,7 @@ import {
 	provider_variants,
 	posts
 } from '$lib/server/schema';
-import { getOwnerPostById, listAllPosts } from './posts';
+import { getOwnerId, getOwnerPostById, listAllPosts } from './posts';
 import { compileResearch } from './researchService';
 import { generateSlides } from './promptGenerator';
 import { config } from './config';
@@ -43,10 +43,11 @@ export const postsApi = new Elysia({ prefix: '/api' })
 		'/posts',
 		async ({ request, body, set }) => {
 			await requireOwner(request);
+			const ownerId = await getOwnerId();
 			const inserted = await db
 				.insert(posts)
 				.values({
-					author_id: 1,
+					author_id: ownerId,
 					topic: body.topic,
 					platform: body.platform ?? 'instagram',
 					tone: body.tone ?? 'informatif',
@@ -63,7 +64,7 @@ export const postsApi = new Elysia({ prefix: '/api' })
 		'/posts/:id',
 		async ({ request, params, body, set }) => {
 			await requireOwner(request);
-			const existing = await getOwnerPostById(Number(params.id));
+			const existing = await getOwnerPostById(params.id);
 			if (!existing) {
 				set.status = 404;
 				return { error: 'Post not found' };
@@ -104,7 +105,7 @@ export const postsApi = new Elysia({ prefix: '/api' })
 	)
 	.delete('/posts/:id', async ({ request, params, set }) => {
 		await requireOwner(request);
-		const existing = await getOwnerPostById(Number(params.id));
+		const existing = await getOwnerPostById(params.id);
 		if (!existing) {
 			set.status = 404;
 			return { error: 'Post not found' };
@@ -115,7 +116,7 @@ export const postsApi = new Elysia({ prefix: '/api' })
 	})
 	.post('/posts/:id/research', async ({ request, params, set }) => {
 		await requireOwner(request);
-		const post = await getOwnerPostById(Number(params.id));
+		const post = await getOwnerPostById(params.id);
 		if (!post) {
 			set.status = 404;
 			return { success: false, error: 'Post not found' };
@@ -145,7 +146,7 @@ export const postsApi = new Elysia({ prefix: '/api' })
 	})
 	.post('/posts/:id/approve-research', async ({ request, params, set }) => {
 		await requireOwner(request);
-		const post = await getOwnerPostById(Number(params.id));
+		const post = await getOwnerPostById(params.id);
 		if (!post) {
 			set.status = 404;
 			return { ok: false, error: 'Post not found' };
@@ -163,7 +164,7 @@ export const postsApi = new Elysia({ prefix: '/api' })
 	})
 	.post('/posts/:id/generate', async ({ request, params, set }) => {
 		await requireOwner(request);
-		const post = await getOwnerPostById(Number(params.id));
+		const post = await getOwnerPostById(params.id);
 		if (!post) {
 			set.status = 404;
 			return { success: false, error: 'Post not found' };
@@ -240,7 +241,7 @@ export const postsApi = new Elysia({ prefix: '/api' })
 		}
 	})
 	.get('/posts/:id/slides', async ({ params, set }) => {
-		const postId = Number(params.id);
+		const postId = params.id;
 		const slides = await db
 			.select()
 			.from(prompt_slides)

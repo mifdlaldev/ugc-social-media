@@ -8,9 +8,9 @@
 	let { data }: { data: PageData } = $props();
 
 	let posts = $derived(data.posts);
-	let deleting = $state<number | null>(null);
+	let deleting = $state<string | null>(null);
 
-	async function deletePost(id: number) {
+	async function deletePost(id: string) {
 		if (!confirm('Hapus post ini?')) return;
 		deleting = id;
 		try {

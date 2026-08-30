@@ -19,7 +19,7 @@ export interface ResearchBrief {
 	topic: string;
 }
 
-const YOU_SEARCH_URL = 'https://api.you.com/v1/web-search';
+const YOU_SEARCH_URL = 'https://ydc-index.io/v1/search';
 
 export async function searchYouCom(query: string, limit = 10): Promise<SearchResult[]> {
 	const apiKey = config.youApiKey;

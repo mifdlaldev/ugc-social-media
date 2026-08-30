@@ -7,6 +7,7 @@ type AppEnv = {
 	OPENROUTER_MODEL?: string;
 	SESSION_SECRET?: string;
 	ADMIN_PASSWORD_HASH?: string;
+	YOU_API_KEY?: string;
 	ALLOWED_ORIGINS?: string;
 	DB?: D1Database;
 };
@@ -42,6 +43,11 @@ export const config = {
 	},
 	get openRouterModel(): string {
 		return value('OPENROUTER_MODEL') ?? 'openrouter/auto';
+	},
+	get youApiKey(): string {
+		const v = value('YOU_API_KEY');
+		if (!v) throw new Error('YOU_API_KEY is not configured');
+		return v;
 	},
 	get databaseUrl(): string {
 		return value('DATABASE_URL') ?? 'file:./data/local.db';

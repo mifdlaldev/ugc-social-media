@@ -1,11 +1,12 @@
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
+import { setPlatformEnv, config } from './config';
 import { compileResearch, searchYouCom } from './researchService';
 
 describe('searchYouCom', () => {
 	const originalFetch = globalThis.fetch;
 
 	beforeEach(() => {
-		process.env.YOU_API_KEY = 'test-key';
+		setPlatformEnv({ YOU_API_KEY: 'test-key' });
 	});
 
 	it('returns parsed search results', async () => {
@@ -41,9 +42,10 @@ describe('searchYouCom', () => {
 		globalThis.fetch = originalFetch;
 	});
 
-	it('throws YOU_API_KEY_NOT_SET when key missing', async () => {
-		delete process.env.YOU_API_KEY;
-		await expect(searchYouCom('test')).rejects.toThrow('YOU_API_KEY_NOT_SET');
+	it('throws when key missing', async () => {
+		setPlatformEnv({});
+		await expect(searchYouCom('test')).rejects.toThrow('YOU_API_KEY is not configured');
+		setPlatformEnv({ YOU_API_KEY: 'test-key' });
 	});
 
 	it('throws on non-OK response', async () => {
@@ -57,7 +59,7 @@ describe('compileResearch', () => {
 	const originalFetch = globalThis.fetch;
 
 	beforeEach(() => {
-		process.env.YOU_API_KEY = 'test-key';
+		setPlatformEnv({ YOU_API_KEY: 'test-key' });
 	});
 
 	it('returns brief with numbered sources', async () => {

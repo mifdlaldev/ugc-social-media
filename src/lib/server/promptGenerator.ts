@@ -22,10 +22,32 @@ export interface GeneratedSlide {
 	variants: ProviderVariant[];
 }
 
+/**
+ * Shared prompt rules, applied to every provider variant.
+ *
+ * Both follow OpenAI's documented prompting guidance recorded in
+ * docs/gpt-image-consistency-reference.md: quote literal text and treat typography
+ * as a constraint, and state exclusions explicitly. Neither is a guarantee that a
+ * provider will comply.
+ */
+const EXACT_TEXT_RULE =
+	'EXACT TEXT: Render the quoted Indonesian text verbatim, with no translation, paraphrase, transliteration, or extra characters. Render it once and make it legible.';
+
+const EXCLUSIONS_RULE =
+	'EXCLUSIONS: No carousel dot indicators, page indicators, swipe arrows, application or browser interface, device frames, decorative borders or frames, watermarks, logos, signatures, QR codes, placeholder text, or additional text.';
+
+/**
+ * The style lock is inserted verbatim. Paraphrasing it would defeat its purpose:
+ * every slide must carry byte-identical aesthetic direction.
+ */
+function styleLockBlock(styleLock: string): string {
+	return `STYLE LOCK — PRESERVE VERBATIM ACROSS ALL SLIDES:\n${styleLock}`;
+}
+
 const PROVIDER_TEMPLATES: Record<Provider, (ctx: SlideContext) => string> = {
 	'gpt-image': (
 		ctx
-	) => `Create an image for ${ctx.placementLabel} (slide ${ctx.slide_index + 1} of ${ctx.slideCount}).
+	) => `${ctx.visualCommand} Create an image for ${ctx.placementLabel} (slide ${ctx.slide_index + 1} of ${ctx.slideCount}).
 Topic: ${ctx.topic}
 Slide type: ${ctx.slide_type}
 Slide title: ${ctx.slide_title}
@@ -33,6 +55,9 @@ Visual form: ${ctx.visualCommand} — ${ctx.visualCommandDescription}
 On-image text: "${ctx.onImageText}"
 Visual direction: ${ctx.visualNotes}
 Target canvas: ${ctx.width}x${ctx.height} pixels, ${ctx.aspectRatio} aspect ratio
+${styleLockBlock(ctx.styleLock)}
+${EXACT_TEXT_RULE}
+${EXCLUSIONS_RULE}
 Render text accurately in Indonesian language. High contrast. Sharp edges.`,
 
 	'nano-banana': (ctx) => `Create a photorealistic or stylized image for ${ctx.placementLabel}.
@@ -41,6 +66,9 @@ Visual form: ${ctx.visualCommand} — ${ctx.visualCommandDescription}
 Visual focus: ${ctx.visualNotes}
 On-image text: "${ctx.onImageText}" (minimal text overlay)
 Target canvas: ${ctx.width}x${ctx.height} pixels, ${ctx.aspectRatio} aspect ratio
+${styleLockBlock(ctx.styleLock)}
+${EXACT_TEXT_RULE}
+${EXCLUSIONS_RULE}
 High quality, professional photography or 3D render style. Cinematic lighting.`,
 
 	recraft: (ctx) => `Create a vector-style illustration for ${ctx.placementLabel}.
@@ -50,6 +78,9 @@ Style: consistent brand illustration, icon-based, flat design
 Elements: ${ctx.visualNotes}
 Text overlay: "${ctx.onImageText}" in modern sans-serif
 Target canvas: ${ctx.width}x${ctx.height} pixels, ${ctx.aspectRatio} aspect ratio
+${styleLockBlock(ctx.styleLock)}
+${EXACT_TEXT_RULE}
+${EXCLUSIONS_RULE}
 Color palette: limited 3-4 colors, brand-aligned. Clean lines, modern flat illustration.`
 };
 
@@ -73,7 +104,7 @@ Rules:
 - Do not invent any factual content absent from the topic and research context
 - Return ONLY the JSON object, no markdown`;
 
-interface SlideContext {
+export interface SlideContext {
 	topic: string;
 	placementLabel: string;
 	visualCommand: string;
@@ -88,6 +119,12 @@ interface SlideContext {
 	aspectRatio: AspectRatio;
 	visualNotes: string;
 	onImageText: string;
+	/** Verbatim aesthetic specification shared by every slide of the post. */
+	styleLock: string;
+}
+
+export function buildProviderPrompt(provider: Provider, context: SlideContext): string {
+	return PROVIDER_TEMPLATES[provider](context);
 }
 
 export interface GenerateResult {
@@ -100,12 +137,14 @@ export async function generateSlides(
 	researchBrief: string,
 	platformPlacement: string,
 	visualCommand: string,
-	slideCount: number
+	slideCount: number,
+	styleLock: string
 ): Promise<GenerateResult> {
 	const placement = findPlatformPlacement(platformPlacement);
 	const command = findVisualCommand(visualCommand);
 	if (!placement) throw new Error('INVALID_PLATFORM_PLACEMENT');
 	if (!command) throw new Error('INVALID_VISUAL_COMMAND');
+	if (styleLock.trim().length === 0) throw new Error('STYLE_LOCK_REQUIRED');
 
 	const synthesis = await synthesizeBriefs(
 		topic,
@@ -131,7 +170,8 @@ export async function generateSlides(
 			height: placement.height,
 			aspectRatio: placement.ratio as AspectRatio,
 			visualNotes: '',
-			onImageText: ''
+			onImageText: '',
+			styleLock
 		};
 
 		const visualData = await buildVisualNotes(ctx);
@@ -141,7 +181,7 @@ export async function generateSlides(
 		const variants: ProviderVariant[] = (['gpt-image', 'nano-banana', 'recraft'] as Provider[]).map(
 			(provider) => ({
 				provider,
-				prompt_text: PROVIDER_TEMPLATES[provider](ctx),
+				prompt_text: buildProviderPrompt(provider, ctx),
 				visual_notes: visualData.visual_notes,
 				on_image_text: visualData.on_image_text,
 				aspect_ratio: ctx.aspectRatio

@@ -76,6 +76,9 @@
 				<Badge variant="secondary">{placementLabel(post.platform_placement)}</Badge>
 				<Badge variant="outline" class="font-mono">{post.visual_command}</Badge>
 				<Badge variant="outline">{post.slide_count} slides</Badge>
+				{#if post.style_lock}
+					<Badge variant="outline">style lock aktif</Badge>
+				{/if}
 			</div>
 		</div>
 		<div class="flex gap-2">
@@ -87,10 +90,19 @@
 	{#if slides.length === 0}
 		<Card.Root class="mb-6">
 			<Card.Content class="py-16 text-center">
-				<p class="text-caption mb-4 text-text-muted">Belum ada prompt yang digenerate.</p>
-				<Button onclick={runGenerate} disabled={generating} size="lg">
-					{generating ? 'Generating...' : 'Generate Prompt'}
-				</Button>
+				{#if !post.style_lock}
+					<p class="text-caption mb-4 text-text-muted">
+						Belum ada style lock. Buat style lock dulu di halaman riset sebelum generate.
+					</p>
+					<Button variant="outline" onclick={() => goto(`/owner/edit/${post.id}`)}>
+						Ke Halaman Riset
+					</Button>
+				{:else}
+					<p class="text-caption mb-4 text-text-muted">Belum ada prompt yang digenerate.</p>
+					<Button onclick={runGenerate} disabled={generating} size="lg">
+						{generating ? 'Generating...' : 'Generate Prompt'}
+					</Button>
+				{/if}
 			</Card.Content>
 		</Card.Root>
 	{:else}

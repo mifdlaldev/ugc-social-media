@@ -18,7 +18,7 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 		.select()
 		.from(post_research_sources)
 		.where(eq(post_research_sources.post_id, post.id));
-	return { post, sources };
+	return { post, sources, styleLock: post.style_lock ?? '' };
 };
 
 export const actions: Actions = {

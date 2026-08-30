@@ -12,6 +12,11 @@ import {
 import { getOwnerId, getOwnerPostById, listAllPosts } from './posts';
 import { compileResearch } from './researchService';
 import { generateSlides } from './promptGenerator';
+import {
+	STYLE_LOCK_MAX_LENGTH,
+	generateStyleLock,
+	validateStyleLockText
+} from './styleLockService';
 import { config } from './config';
 import { createHash } from 'node:crypto';
 import { DEFAULT_VISUAL_COMMAND, VISUAL_COMMAND_VALUES } from '$lib/catalog/visualCommands';
@@ -30,6 +35,18 @@ const postBody = t.Object({
 	slide_count: t.Optional(t.Integer({ minimum: 3, maximum: 7 })),
 	excerpt: t.Optional(t.String({ maxLength: 300 }))
 });
+
+/** Numbered research brief, shared by the style-lock and generate routes. */
+function buildResearchBrief(
+	sources: { source_title: string | null; source_snippet: string | null; source_url: string }[]
+): string {
+	return sources
+		.map(
+			(s, i) =>
+				`[${i + 1}] ${s.source_title ?? ''}\n${s.source_snippet ?? ''}\nURL: ${s.source_url}`
+		)
+		.join('\n\n');
+}
 
 export const postsApi = new Elysia({ prefix: '/api' })
 	.get('/posts', async ({ request, set }) => {
@@ -174,6 +191,85 @@ export const postsApi = new Elysia({ prefix: '/api' })
 		set.status = 200;
 		return { ok: true };
 	})
+	.get('/posts/:id/style-lock', async ({ request, params, set }) => {
+		await requireOwner(request);
+		const post = await getOwnerPostById(params.id);
+		if (!post) {
+			set.status = 404;
+			return { error: 'Post not found' };
+		}
+		set.status = 200;
+		return {
+			style_lock: post.style_lock,
+			has_style_lock: (post.style_lock ?? '').trim().length > 0
+		};
+	})
+	.post('/posts/:id/style-lock', async ({ request, params, set }) => {
+		await requireOwner(request);
+		const post = await getOwnerPostById(params.id);
+		if (!post) {
+			set.status = 404;
+			return { success: false, error: 'Post not found' };
+		}
+		const sources = await db
+			.select()
+			.from(post_research_sources)
+			.where(eq(post_research_sources.post_id, post.id));
+		if (sources.length === 0) {
+			set.status = 400;
+			return { success: false, error: 'No research sources. Run and approve research first.' };
+		}
+		try {
+			const result = await generateStyleLock(
+				post.topic,
+				buildResearchBrief(sources),
+				post.platform_placement,
+				post.visual_command
+			);
+			const [updated] = await db
+				.update(posts)
+				.set({ style_lock: result.style_lock })
+				.where(eq(posts.id, post.id))
+				.returning();
+			set.status = 200;
+			return { success: true, style_lock: updated?.style_lock ?? result.style_lock };
+		} catch (err) {
+			const message = err instanceof Error ? err.message : 'Unknown error';
+			set.status = 500;
+			return { success: false, error: message };
+		}
+	})
+	.put(
+		'/posts/:id/style-lock',
+		async ({ request, params, body, set }) => {
+			await requireOwner(request);
+			const post = await getOwnerPostById(params.id);
+			if (!post) {
+				set.status = 404;
+				return { success: false, error: 'Post not found' };
+			}
+			try {
+				// The owner's wording is authoritative; only bounds are enforced.
+				const text = validateStyleLockText(body.style_lock);
+				const [updated] = await db
+					.update(posts)
+					.set({ style_lock: text })
+					.where(eq(posts.id, post.id))
+					.returning();
+				set.status = 200;
+				return { success: true, style_lock: updated?.style_lock ?? text };
+			} catch (err) {
+				const message = err instanceof Error ? err.message : 'Unknown error';
+				set.status = 422;
+				return { success: false, error: message };
+			}
+		},
+		{
+			body: t.Object({
+				style_lock: t.String({ minLength: 1, maxLength: STYLE_LOCK_MAX_LENGTH })
+			})
+		}
+	)
 	.post('/posts/:id/generate', async ({ request, params, set }) => {
 		await requireOwner(request);
 		const post = await getOwnerPostById(params.id);
@@ -189,19 +285,23 @@ export const postsApi = new Elysia({ prefix: '/api' })
 			set.status = 400;
 			return { success: false, error: 'No research sources' };
 		}
-		const researchBrief = sources
-			.map(
-				(s, i) =>
-					`[${i + 1}] ${s.source_title ?? ''}\n${s.source_snippet ?? ''}\nURL: ${s.source_url}`
-			)
-			.join('\n\n');
+		const styleLock = (post.style_lock ?? '').trim();
+		if (styleLock.length === 0) {
+			set.status = 400;
+			return {
+				success: false,
+				error: 'No style lock. Produce a style lock before generating slides.'
+			};
+		}
+		const researchBrief = buildResearchBrief(sources);
 		try {
 			const result = await generateSlides(
 				post.topic,
 				researchBrief,
 				post.platform_placement,
 				post.visual_command,
-				post.slide_count
+				post.slide_count,
+				styleLock
 			);
 			const oldSlides = await db
 				.select({ id: prompt_slides.id })

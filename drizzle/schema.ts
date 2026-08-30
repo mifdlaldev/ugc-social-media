@@ -95,6 +95,13 @@ export const posts = sqliteTable(
 			.default('/infographic'),
 		slide_count: integer('slide_count').notNull().default(5), // 3-7
 		excerpt: text('excerpt'), // auto-generated from research, max 300 char
+		/**
+		 * Aesthetic-only style specification, reused verbatim by every slide of this
+		 * post so a carousel stays visually consistent. NULL until the owner produces
+		 * one. Holds medium, palette, typography, shape language, and background only;
+		 * never engineering facts. See src/lib/server/styleLockService.ts.
+		 */
+		style_lock: text('style_lock'),
 		/** Owner workflow state: has this been published to social media yet? */
 		post_status: text('post_status', { enum: ['draft', 'posted'] })
 			.notNull()

@@ -5,12 +5,14 @@
 	import { Alert, AlertDescription, AlertTitle } from '$lib/components/ui/alert';
 	import { goto } from '$app/navigation';
 	import { findPlatformPlacement } from '$lib/catalog/platformPlacements';
+	import StyleLockPanel from '$lib/components/StyleLockPanel.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
 	let post = $derived(data.post);
 	let sources = $derived(data.sources);
+	let styleLock = $derived(data.styleLock);
 	let researching = $state(false);
 	let approveError = $state('');
 
@@ -35,6 +37,10 @@
 		approveError = '';
 		if (sources.length === 0) {
 			approveError = 'Belum ada sumber. Jalankan riset dulu.';
+			return;
+		}
+		if (styleLock.trim().length === 0) {
+			approveError = 'Belum ada style lock. Buat style lock dulu di panel di atas.';
 			return;
 		}
 		try {
@@ -106,6 +112,8 @@
 			</Button>
 		</Card.Content>
 	</Card.Root>
+
+	<StyleLockPanel postId={post.id} initialStyleLock={styleLock} canGenerate={sources.length > 0} />
 
 	{#if sources.length > 0}
 		<section class="mb-6">

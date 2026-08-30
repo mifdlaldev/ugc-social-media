@@ -65,13 +65,22 @@ export const actions: Actions = {
 			)
 			.join('\n\n');
 
+		const styleLock = (post.style_lock ?? '').trim();
+		if (styleLock.length === 0) {
+			return {
+				success: false,
+				error: 'Belum ada style lock. Buat style lock dulu sebelum generate.'
+			};
+		}
+
 		try {
 			const result = await generateSlides(
 				post.topic,
 				researchBrief,
 				post.platform_placement,
 				post.visual_command,
-				post.slide_count
+				post.slide_count,
+				styleLock
 			);
 
 			const oldSlides = await db

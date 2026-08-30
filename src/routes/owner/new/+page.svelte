@@ -33,8 +33,7 @@
 					platform,
 					tone,
 					slide_count: slideCount,
-					excerpt: excerpt.trim() || undefined,
-					status: 'draft'
+					excerpt: excerpt.trim() || undefined
 				})
 			});
 			const contentType = res.headers.get('content-type') ?? '';

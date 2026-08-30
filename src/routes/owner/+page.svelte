@@ -80,9 +80,6 @@
 									<Badge variant={platformColor(post.platform)}>{post.platform}</Badge>
 									<Badge variant="outline">{post.tone}</Badge>
 									<Badge variant="outline">{post.slide_count} slides</Badge>
-									<Badge variant={post.status === 'published' ? 'default' : 'outline'}>
-										{post.status}
-									</Badge>
 								</div>
 							</div>
 							<div class="flex flex-col gap-2">

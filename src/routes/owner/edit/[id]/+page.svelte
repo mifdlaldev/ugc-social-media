@@ -64,10 +64,6 @@
 		<div class="min-w-0 flex-1">
 			<div class="text-text-muted mb-2 flex items-center gap-2 font-mono text-xs">
 				<span>#{post.id}</span>
-				<span>·</span>
-				<Badge variant={post.status === 'published' ? 'default' : 'outline'}>
-					{post.status}
-				</Badge>
 			</div>
 			<h1 class="text-display text-foreground truncate font-mono">{post.topic}</h1>
 			<div class="text-text-secondary mt-3 flex flex-wrap items-center gap-2">

@@ -9,7 +9,7 @@ import {
 	provider_variants,
 	posts
 } from '$lib/server/schema';
-import { getOwnerPostById, getPublishedPostById, listAllPosts, listPublishedPosts } from './posts';
+import { getOwnerPostById, listAllPosts } from './posts';
 import { compileResearch } from './researchService';
 import { generateSlides } from './promptGenerator';
 import { config } from './config';
@@ -30,24 +30,10 @@ const postBody = t.Object({
 		})
 	),
 	slide_count: t.Optional(t.Integer({ minimum: 3, maximum: 7 })),
-	excerpt: t.Optional(t.String({ maxLength: 300 })),
-	status: t.Optional(t.Enum({ draft: 'draft', published: 'published' }))
+	excerpt: t.Optional(t.String({ maxLength: 300 }))
 });
 
 export const postsApi = new Elysia({ prefix: '/api' })
-	.get('/feed', async ({ set }) => {
-		set.status = 200;
-		return await listPublishedPosts();
-	})
-	.get('/posts/:id', async ({ params, set }) => {
-		const post = await getPublishedPostById(Number(params.id));
-		if (!post) {
-			set.status = 404;
-			return { error: 'Post not found' };
-		}
-		set.status = 200;
-		return post;
-	})
 	.get('/posts', async ({ request, set }) => {
 		await requireOwner(request);
 		set.status = 200;
@@ -65,8 +51,7 @@ export const postsApi = new Elysia({ prefix: '/api' })
 					platform: body.platform ?? 'instagram',
 					tone: body.tone ?? 'informatif',
 					slide_count: body.slide_count ?? 5,
-					excerpt: body.excerpt ?? null,
-					status: body.status ?? 'draft'
+					excerpt: body.excerpt ?? null
 				})
 				.returning();
 			set.status = 201;
@@ -90,12 +75,7 @@ export const postsApi = new Elysia({ prefix: '/api' })
 					platform: body.platform ?? existing.platform,
 					tone: body.tone ?? existing.tone,
 					slide_count: body.slide_count ?? existing.slide_count,
-					excerpt: body.excerpt !== undefined ? body.excerpt : existing.excerpt,
-					status: body.status ?? existing.status,
-					published_at:
-						body.status === 'published' && existing.published_at === null
-							? sql`(unixepoch())`
-							: existing.published_at
+					excerpt: body.excerpt !== undefined ? body.excerpt : existing.excerpt
 				})
 				.where(eq(posts.id, existing.id))
 				.returning();
@@ -118,8 +98,7 @@ export const postsApi = new Elysia({ prefix: '/api' })
 					})
 				),
 				slide_count: t.Optional(t.Integer({ minimum: 3, maximum: 7 })),
-				excerpt: t.Optional(t.String({ maxLength: 300 })),
-				status: t.Optional(t.Enum({ draft: 'draft', published: 'published' }))
+				excerpt: t.Optional(t.String({ maxLength: 300 }))
 			})
 		}
 	)

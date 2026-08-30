@@ -1,7 +1,9 @@
+import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { listPublishedPosts } from '$lib/server/posts';
 
-export const load: PageServerLoad = async () => {
-	const posts = await listPublishedPosts();
-	return { posts };
+export const load: PageServerLoad = async ({ locals }) => {
+	if (locals.session) {
+		throw redirect(302, '/owner');
+	}
+	throw redirect(302, '/login');
 };

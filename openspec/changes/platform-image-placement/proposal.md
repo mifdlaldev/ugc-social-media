@@ -62,9 +62,9 @@ Threads feed, WhatsApp Status, KASKUS thread image, and TikTok photo post are ex
 - Changes to `slide_count`, `post_status`, the research flow, or the Prompt Block Schema in `DESIGN.md` §6.
 - Any claim that a provider guarantees exact output dimensions. The prompt states the target canvas; it does not prove provider compliance.
 
-## Dependency
+## Dependency and implementation status
 
-`visual-command-post-style` also rebuilds the `posts` table. Both changes MUST be applied through a **single table-rebuild migration** that replaces `tone` with `visual_command` and `platform` with `platform_placement` together. Two sequential rebuilds of the same table are not acceptable.
+`visual-command-post-style` and this change were implemented together in `drizzle/migrations/0005_visual_command_and_placement.sql`. That migration replaced `tone` with `visual_command` and `platform` with `platform_placement` in one table rebuild. The migration is already applied to the local database. Future changes must not recreate that combined migration; a later CHECK-constraint change such as the 5–10 slide range requires its own verified rebuild.
 
 ## Success Criteria
 

@@ -8,7 +8,7 @@
 ## 2. Schema
 
 - [ ] 2.1 Add a nullable `style_lock` text column to `posts` in `drizzle/schema.ts`.
-- [ ] 2.2 Fold this column into the already planned combined `posts` rebuild migration rather than issuing a second rebuild.
+- [ ] 2.2 Add the column with `ALTER TABLE posts ADD COLUMN` in a new migration; the combined rebuild is already applied as migration 0005, and a nullable column without a CHECK constraint needs no rebuild.
 - [ ] 2.3 Verify existing posts migrate with `style_lock` null and no invented default text.
 
 ## 3. Style Lock Service
@@ -68,4 +68,4 @@
 all -> 7 (verification)
 ```
 
-Depends on the combined `posts` rebuild shared with `visual-command-post-style` and `platform-image-placement`.
+The combined `posts` rebuild (migration 0005) is already applied, so this change does not wait on it.

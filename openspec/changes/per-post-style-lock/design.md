@@ -16,7 +16,9 @@ Add:
 posts.style_lock: nullable text
 ```
 
-Nullable represents the pre-style-lock state and allows existing posts to be migrated without inventing a style. This is an additive field and does not require another `posts` rebuild beyond the already planned combined `tone`/`platform` migration.
+Nullable represents the pre-style-lock state and allows existing posts to be migrated without inventing a style.
+
+The combined `tone` → `visual_command` and `platform` → `platform_placement` rebuild has already been applied as `drizzle/migrations/0005_visual_command_and_placement.sql`. Adding `style_lock` is purely additive and carries no CHECK constraint, so SQLite supports it through `ALTER TABLE posts ADD COLUMN`. No table rebuild is required for this change.
 
 Persist only the reviewed text and generation metadata already covered by `generation_attempts`. Do not store image files or provider credentials.
 

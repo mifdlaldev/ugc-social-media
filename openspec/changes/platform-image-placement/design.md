@@ -25,7 +25,7 @@ The API validation enum, the UI option list, and the prompt pipeline all derive 
 
 ## Data Migration
 
-This change and `visual-command-post-style` both rebuild the `posts` table. They MUST share **one** table-rebuild migration:
+This change and `visual-command-post-style` shared **one** table-rebuild migration, applied as `drizzle/migrations/0005_visual_command_and_placement.sql`:
 
 1. Create a replacement `posts` table replacing `tone` with `visual_command` and `platform` with `platform_placement`, keeping every other column unchanged.
 2. Copy all rows.
@@ -38,7 +38,7 @@ This change and `visual-command-post-style` both rebuild the `posts` table. They
 6. Recreate `posts_author_idx`, `posts_status_idx`, and `posts_created_idx`.
 7. Verify row count, post IDs, and foreign keys before applying to production D1.
 
-Exact SQL, the migration filename, and D1 compatibility are TBD until implementation and must be verified against the existing migration style rather than assumed.
+The SQL is hand-written rather than generated, because the legacy value mapping cannot be expressed by `drizzle-kit generate`. Local application was verified: `posts` now exposes `platform_placement` and `visual_command`, the three indexes were recreated, and `PRAGMA foreign_key_check` reported no violations. **D1 compatibility remains unverified** and must be checked before any production deploy.
 
 ## API Changes
 

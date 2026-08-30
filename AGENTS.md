@@ -154,9 +154,22 @@ Manage via `skills-lock.json` at the project root.
 - Commit messages: conventional (`feat:`, `fix:`, `docs:`, `chore:`).
 - No AI-generated placeholder content. If seed/sample content is needed, mark it clearly as `[sample]` and ask the owner for real content.
 
+## Image Prompt Command Rules
+
+- The owner-supplied reference catalog is `docs/prompt-command-reference.md`, extracted from `500 Perintah Rahasia ChatGPT.pdf` and `kumpulan command.pdf`.
+- Before redesigning image-prompt generation, read that catalog and the two source PDFs. Do not invent, rename, or silently reinterpret commands, command descriptions, prompt patterns, provider capabilities, or image-generation syntax.
+- The slash commands in the PDFs are prompt-writing conventions, not assumed native ChatGPT or image-generator API commands. Treat them as selectable style/layout directives only when the approved spec explicitly requires that behavior.
+- The 50-command PDF distinguishes `/command <topic>` (short) from a detailed form that adds concrete elements, style, layout, format, and text-language instructions. Preserve this distinction when specified; do not add details that are not supported by the topic or approved research.
+- The catalog is a reference, not permission to add facts. Every engineering fact, number, material, dimension, named method, or claim must still come only from the approved research and user topic.
+- If a future requirement conflicts with the catalog or is not defined by the current OpenSpec, stop and ask the owner before implementation.
+
 ## Prompt Generation Service Rules
 
-The prompt-generation service (`src/services/promptGenerator.ts`) is the heart of the product. Requirements:
+Before changing prompt generation, update the relevant OpenSpec proposal/spec/design/tasks artifacts and obtain approval. The current implementation must not be changed based only on the PDF catalog.
+
+
+
+The prompt-generation service (`src/lib/server/promptGenerator.ts`) is the heart of the product. Requirements:
 
 - Input: article text (+ optional template/preset selected by the user).
 - Output: **structured JSON** matching the block schema in `DESIGN.md §Prompt Block Schema`. Do not change the schema without updating DESIGN.md + openspec specs.

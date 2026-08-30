@@ -76,6 +76,15 @@ openspec/changes/<change-name>/proposal.md + specs/ + design.md + tasks.md
 
 Required reading before touching code: `AGENTS.md`, `DESIGN.md`, and the relevant specs in `openspec/`.
 
+## Prompt Command Reference
+
+`docs/prompt-command-reference.md` is a verbatim catalog of the two owner-supplied PDFs:
+
+- `500 Perintah Rahasia ChatGPT.pdf` — 500 commands in 5 sections; Bagian 3 (201–300) is the AI-image section, Bagian 1 (1–51) covers information layout.
+- `kumpulan command.pdf` — 50 commands by Ahmad Fauzi, each with a short (`/command <topik>`) and a detailed prompt form.
+
+The catalog is a **reference for redesigning prompt generation**, not a feature list and not permission to add engineering facts. Facts still come only from You.com research plus the owner's topic. See `AGENTS.md` §Image Prompt Command Rules.
+
 ## Status
 
 - 🚧 **§1 Scaffolding in progress** — SvelteKit + Elysia + shadcn-svelte + Cloudflare Workers

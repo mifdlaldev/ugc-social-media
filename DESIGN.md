@@ -256,6 +256,15 @@ type PromptGenerationResult = {
 - `fidelityNotes` records limitations or items that were not specified in the article.
 - The UI must not present the output as verified engineering advice.
 
+### Prompt command catalog (reference only)
+
+`docs/prompt-command-reference.md` holds a verbatim extraction of the two owner-supplied PDFs:
+
+- `500 Perintah Rahasia ChatGPT.pdf` — 500 commands across 5 sections. Bagian 3 (201–300) is the PDF's own AI-image / photography / cinematic-style / art-design section. Bagian 1 (1–100) holds visual-explanation and layout commands.
+- `kumpulan command.pdf` — 50 commands by Ahmad Fauzi, each documented in a short form (`/command <topik>`) and a detailed form that adds concrete elements, style, layout, format, and text language.
+
+Status: **reference material, not an approved feature.** The catalog does not change this schema, the pipeline in §7, or the fact-fidelity boundary. Any redesign of prompt generation that draws on the catalog requires a new OpenSpec change (proposal → specs → design → tasks) approved before implementation. Slash commands in those PDFs are prompt-writing conventions; they are not verified native commands of ChatGPT, GPT Image, Nano Banana, or Recraft.
+
 ## 7. AI Pipeline
 
 ### Input

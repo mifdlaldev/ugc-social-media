@@ -14,21 +14,19 @@ import { compileResearch } from './researchService';
 import { generateSlides } from './promptGenerator';
 import { config } from './config';
 import { createHash } from 'node:crypto';
+import { DEFAULT_VISUAL_COMMAND, VISUAL_COMMAND_VALUES } from '$lib/catalog/visualCommands';
+import {
+	DEFAULT_PLATFORM_PLACEMENT,
+	PLATFORM_PLACEMENT_VALUES
+} from '$lib/catalog/platformPlacements';
+
+const visualCommandSchema = t.Union(VISUAL_COMMAND_VALUES.map((value) => t.Literal(value)));
+const platformPlacementSchema = t.Union(PLATFORM_PLACEMENT_VALUES.map((value) => t.Literal(value)));
 
 const postBody = t.Object({
 	topic: t.String({ minLength: 1, maxLength: 200 }),
-	platform: t.Optional(
-		t.Enum({ instagram: 'instagram', facebook: 'facebook', linkedin: 'linkedin' })
-	),
-	tone: t.Optional(
-		t.Enum({
-			detail: 'detail',
-			observatif: 'observatif',
-			informatif: 'informatif',
-			menjual: 'menjual',
-			creative: 'creative'
-		})
-	),
+	platform_placement: t.Optional(platformPlacementSchema),
+	visual_command: t.Optional(visualCommandSchema),
 	slide_count: t.Optional(t.Integer({ minimum: 3, maximum: 7 })),
 	excerpt: t.Optional(t.String({ maxLength: 300 }))
 });
@@ -49,8 +47,8 @@ export const postsApi = new Elysia({ prefix: '/api' })
 				.values({
 					author_id: ownerId,
 					topic: body.topic,
-					platform: body.platform ?? 'instagram',
-					tone: body.tone ?? 'informatif',
+					platform_placement: body.platform_placement ?? DEFAULT_PLATFORM_PLACEMENT,
+					visual_command: body.visual_command ?? DEFAULT_VISUAL_COMMAND,
 					slide_count: body.slide_count ?? 5,
 					excerpt: body.excerpt ?? null
 				})
@@ -73,8 +71,8 @@ export const postsApi = new Elysia({ prefix: '/api' })
 				.update(posts)
 				.set({
 					topic: body.topic ?? existing.topic,
-					platform: body.platform ?? existing.platform,
-					tone: body.tone ?? existing.tone,
+					platform_placement: body.platform_placement ?? existing.platform_placement,
+					visual_command: body.visual_command ?? existing.visual_command,
 					slide_count: body.slide_count ?? existing.slide_count,
 					excerpt: body.excerpt !== undefined ? body.excerpt : existing.excerpt
 				})
@@ -86,18 +84,8 @@ export const postsApi = new Elysia({ prefix: '/api' })
 		{
 			body: t.Object({
 				topic: t.Optional(t.String({ minLength: 1, maxLength: 200 })),
-				platform: t.Optional(
-					t.Enum({ instagram: 'instagram', facebook: 'facebook', linkedin: 'linkedin' })
-				),
-				tone: t.Optional(
-					t.Enum({
-						detail: 'detail',
-						observatif: 'observatif',
-						informatif: 'informatif',
-						menjual: 'menjual',
-						creative: 'creative'
-					})
-				),
+				platform_placement: t.Optional(platformPlacementSchema),
+				visual_command: t.Optional(visualCommandSchema),
 				slide_count: t.Optional(t.Integer({ minimum: 3, maximum: 7 })),
 				excerpt: t.Optional(t.String({ maxLength: 300 }))
 			})
@@ -211,8 +199,8 @@ export const postsApi = new Elysia({ prefix: '/api' })
 			const result = await generateSlides(
 				post.topic,
 				researchBrief,
-				post.platform,
-				post.tone,
+				post.platform_placement,
+				post.visual_command,
 				post.slide_count
 			);
 			const oldSlides = await db

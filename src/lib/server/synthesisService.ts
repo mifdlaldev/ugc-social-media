@@ -1,4 +1,6 @@
 import { chatCompletion } from './openRouterClient';
+import { findVisualCommand } from '$lib/catalog/visualCommands';
+import { findPlatformPlacement } from '$lib/catalog/platformPlacements';
 
 export type SlideType = 'hook' | 'problem' | 'data' | 'solution' | 'cta' | 'custom';
 
@@ -11,8 +13,8 @@ export interface SlideBrief {
 
 export interface SynthesisResult {
 	topic: string;
-	platform: string;
-	tone: string;
+	platform_placement: string;
+	visual_command: string;
 	slides: SlideBrief[];
 }
 
@@ -41,33 +43,29 @@ Rules:
 - slide_title should be evocative but factual
 - language: Indonesian`;
 
-const TONE_GUIDANCE: Record<string, string> = {
-	detail: 'Use specific numbers and precise terminology. Tables and comparisons.',
-	observatif: 'Use provocative questions and visual metaphors. Pattern-focused.',
-	informatif: 'Educational tone. "Tahukah kamu?" style. Bullet-friendly facts.',
-	menjual: 'Highlight pain points and benefits. Action-driven CTAs.',
-	creative: 'Storytelling, analogies, metaphors. Visual-first.'
-};
-
-const PLATFORM_GUIDANCE: Record<string, string> = {
-	instagram: '1:1 or 4:5. Bold visuals. Minimal text. Hook in first slide.',
-	facebook: '4:5 or 1:1. Informative. Slightly longer captions allowed.',
-	linkedin: '1.91:1 or 1:1. Professional. Detailed text. Industry-focused.'
-};
-
 export async function synthesizeBriefs(
 	topic: string,
 	researchBrief: string,
-	platform: string,
-	tone: string,
+	platformPlacement: string,
+	visualCommand: string,
 	slideCount: number
 ): Promise<SynthesisResult> {
-	const toneGuide = TONE_GUIDANCE[tone] ?? TONE_GUIDANCE.informatif;
-	const platformGuide = PLATFORM_GUIDANCE[platform] ?? PLATFORM_GUIDANCE.instagram;
+	const command = findVisualCommand(visualCommand);
+	const placement = findPlatformPlacement(platformPlacement);
+
+	/**
+	 * Both lines below describe FORM only. The catalog description states the
+	 * visual form; the placement states the target canvas. Neither may introduce
+	 * a factual claim: those come solely from the research sources.
+	 */
+	const commandLine = command ? `${command.value} — ${command.description}` : visualCommand;
+	const placementLine = placement
+		? `${placement.platform} ${placement.placement} — target canvas ${placement.width}x${placement.height} px, ratio ${placement.ratio}`
+		: platformPlacement;
 
 	const userMessage = `TOPIC: ${topic}
-PLATFORM: ${platform} — ${platformGuide}
-TONE: ${tone} — ${toneGuide}
+TARGET PLACEMENT: ${placementLine}
+VISUAL FORM: ${commandLine}
 SLIDE_COUNT: ${slideCount}
 
 RESEARCH SOURCES:
@@ -84,7 +82,12 @@ Produce a brief for ${slideCount} slides. Output valid JSON only.`;
 	);
 
 	const parsed = parseSynthesisResponse(content, slideCount);
-	return { topic, platform, tone, slides: parsed };
+	return {
+		topic,
+		platform_placement: platformPlacement,
+		visual_command: visualCommand,
+		slides: parsed
+	};
 }
 
 function parseSynthesisResponse(content: string, expectedCount: number): SlideBrief[] {

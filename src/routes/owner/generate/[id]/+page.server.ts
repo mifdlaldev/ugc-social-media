@@ -69,8 +69,8 @@ export const actions: Actions = {
 			const result = await generateSlides(
 				post.topic,
 				researchBrief,
-				post.platform,
-				post.tone,
+				post.platform_placement,
+				post.visual_command,
 				post.slide_count
 			);
 

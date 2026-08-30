@@ -3,6 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import { goto } from '$app/navigation';
+	import { findPlatformPlacement } from '$lib/catalog/platformPlacements';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -48,6 +49,13 @@
 		setTimeout(() => (copiedId = null), 2000);
 	}
 
+	function placementLabel(value: string): string {
+		const placement = findPlatformPlacement(value);
+		return placement
+			? `${placement.platform} ${placement.width}×${placement.height} · ${placement.ratio}`
+			: value;
+	}
+
 	function providerLabel(id: string): string {
 		return providers.find((p) => p.id === id)?.label ?? id;
 	}
@@ -65,8 +73,8 @@
 			</div>
 			<h1 class="text-display truncate font-mono text-foreground">{post.topic}</h1>
 			<div class="mt-3 flex flex-wrap items-center gap-2 text-text-secondary">
-				<Badge variant="secondary">{post.platform}</Badge>
-				<Badge variant="outline">{post.tone}</Badge>
+				<Badge variant="secondary">{placementLabel(post.platform_placement)}</Badge>
+				<Badge variant="outline" class="font-mono">{post.visual_command}</Badge>
 				<Badge variant="outline">{post.slide_count} slides</Badge>
 			</div>
 		</div>

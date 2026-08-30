@@ -4,13 +4,14 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Textarea } from '$lib/components/ui/textarea';
 	import { Badge } from '$lib/components/ui/badge';
-	import * as Select from '$lib/components/ui/select';
 	import * as Field from '$lib/components/ui/field';
 	import { goto } from '$app/navigation';
+	import VisualCommandSelect from '$lib/components/VisualCommandSelect.svelte';
+	import PlatformPlacementSelect from '$lib/components/PlatformPlacementSelect.svelte';
 
 	let topic = $state('');
-	let platform = $state('instagram');
-	let tone = $state('informatif');
+	let platformPlacement = $state('instagram-feed-portrait');
+	let visualCommand = $state('/infographic');
 	let slideCount = $state(5);
 	let excerpt = $state('');
 	let error = $state('');
@@ -30,16 +31,16 @@
 				headers: { 'content-type': 'application/json' },
 				body: JSON.stringify({
 					topic: topic.trim(),
-					platform,
-					tone,
+					platform_placement: platformPlacement,
+					visual_command: visualCommand,
 					slide_count: slideCount,
 					excerpt: excerpt.trim() || undefined
 				})
 			});
 			const contentType = res.headers.get('content-type') ?? '';
-			let data: { id?: number; error?: string } = {};
+			let data: { id?: string; error?: string } = {};
 			if (contentType.includes('application/json')) {
-				data = (await res.json()) as { id?: number; error?: string };
+				data = (await res.json()) as { id?: string; error?: string };
 			} else {
 				const text = await res.text();
 				data = { error: text || `HTTP ${res.status}` };
@@ -55,20 +56,6 @@
 			loading = false;
 		}
 	}
-
-	const platforms = [
-		{ value: 'instagram', label: 'Instagram' },
-		{ value: 'facebook', label: 'Facebook' },
-		{ value: 'linkedin', label: 'LinkedIn' }
-	] as const;
-
-	const tones = [
-		{ value: 'informatif', label: 'Informatif' },
-		{ value: 'detail', label: 'Detail' },
-		{ value: 'observatif', label: 'Observatif' },
-		{ value: 'menjual', label: 'Menjual' },
-		{ value: 'creative', label: 'Creative' }
-	] as const;
 </script>
 
 <svelte:head>
@@ -79,7 +66,8 @@
 	<header class="mb-8">
 		<h1 class="text-display text-foreground">Post Baru</h1>
 		<p class="mt-2 text-text-secondary">
-			Tulis topik social media, pilih platform dan tone. AI akan riset & generate prompt carousel.
+			Tulis topik social media, pilih bentuk visual dan ukuran. AI akan riset & generate prompt
+			carousel.
 		</p>
 	</header>
 
@@ -96,40 +84,13 @@
 						required
 						class="font-mono"
 					/>
-					<Field.FieldDescription
-						>Maks 200 karakter. Akan jadi judul carousel.</Field.FieldDescription
-					>
+					<Field.FieldDescription>
+						Maks 200 karakter. Akan jadi judul carousel.
+					</Field.FieldDescription>
 				</Field.Field>
 
-				<div class="grid gap-6 sm:grid-cols-2">
-					<Field.Field>
-						<Field.FieldLabel>Platform</Field.FieldLabel>
-						<Select.Root type="single" bind:value={platform}>
-							<Select.Trigger>
-								{platforms.find((p) => p.value === platform)?.label ?? platform}
-							</Select.Trigger>
-							<Select.Content>
-								{#each platforms as p (p.value)}
-									<Select.Item value={p.value} label={p.label} />
-								{/each}
-							</Select.Content>
-						</Select.Root>
-					</Field.Field>
-
-					<Field.Field>
-						<Field.FieldLabel>Tone</Field.FieldLabel>
-						<Select.Root type="single" bind:value={tone}>
-							<Select.Trigger>
-								{tones.find((t) => t.value === tone)?.label ?? tone}
-							</Select.Trigger>
-							<Select.Content>
-								{#each tones as t (t.value)}
-									<Select.Item value={t.value} label={t.label} />
-								{/each}
-							</Select.Content>
-						</Select.Root>
-					</Field.Field>
-				</div>
+				<VisualCommandSelect bind:value={visualCommand} />
+				<PlatformPlacementSelect bind:value={platformPlacement} />
 
 				<Field.Field>
 					<Field.FieldLabel>Jumlah Slide (3-7)</Field.FieldLabel>
@@ -158,9 +119,9 @@
 						rows={3}
 						maxlength={300}
 					/>
-					<Field.FieldDescription
-						>Maks 300 karakter. Akan tampil di public feed.</Field.FieldDescription
-					>
+					<Field.FieldDescription>
+						Maks 300 karakter. Akan dipakai sebagai konteks tambahan.
+					</Field.FieldDescription>
 				</Field.Field>
 
 				{#if error}

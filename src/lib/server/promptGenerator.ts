@@ -1,8 +1,10 @@
+import { findPlatformPlacement } from '$lib/catalog/platformPlacements';
+import { findVisualCommand } from '$lib/catalog/visualCommands';
 import { chatCompletion } from './openRouterClient';
 import { synthesizeBriefs, type SlideBrief, type SynthesisResult } from './synthesisService';
 
 export type Provider = 'gpt-image' | 'nano-banana' | 'recraft';
-export type AspectRatio = '1:1' | '9:16' | '4:5' | '1.91:1';
+export type AspectRatio = '1:1' | '9:16' | '4:5' | '1.91:1' | '16:9' | '2:3';
 
 export interface ProviderVariant {
 	provider: Provider;
@@ -20,46 +22,40 @@ export interface GeneratedSlide {
 	variants: ProviderVariant[];
 }
 
-const ASPECT_BY_PLATFORM: Record<string, AspectRatio> = {
-	instagram: '1:1',
-	facebook: '4:5',
-	linkedin: '1.91:1'
-};
-
 const PROVIDER_TEMPLATES: Record<Provider, (ctx: SlideContext) => string> = {
 	'gpt-image': (
 		ctx
-	) => `Create an infographic for ${ctx.platform} carousel (slide ${ctx.slide_index + 1} of ${ctx.slideCount}).
+	) => `Create an image for ${ctx.placementLabel} (slide ${ctx.slide_index + 1} of ${ctx.slideCount}).
 Topic: ${ctx.topic}
 Slide type: ${ctx.slide_type}
 Slide title: ${ctx.slide_title}
+Visual form: ${ctx.visualCommand} — ${ctx.visualCommandDescription}
 On-image text: "${ctx.onImageText}"
-Tone: ${ctx.tone}
-Visual: ${ctx.visualNotes}
-Composition: ${ctx.aspectRatio} aspect ratio
-Style: clean infographic, bold typography, professional architecture/engineering
+Visual direction: ${ctx.visualNotes}
+Target canvas: ${ctx.width}x${ctx.height} pixels, ${ctx.aspectRatio} aspect ratio
 Render text accurately in Indonesian language. High contrast. Sharp edges.`,
 
-	'nano-banana': (ctx) => `Photorealistic or stylized hero image for ${ctx.platform} post.
+	'nano-banana': (ctx) => `Create a photorealistic or stylized image for ${ctx.placementLabel}.
 Topic: ${ctx.topic}
-Mood: ${ctx.tone}
+Visual form: ${ctx.visualCommand} — ${ctx.visualCommandDescription}
 Visual focus: ${ctx.visualNotes}
-Subtle text overlay: "${ctx.onImageText}" (minimal, let the image breathe)
-Composition: ${ctx.aspectRatio}, vertical or square
+On-image text: "${ctx.onImageText}" (minimal text overlay)
+Target canvas: ${ctx.width}x${ctx.height} pixels, ${ctx.aspectRatio} aspect ratio
 High quality, professional photography or 3D render style. Cinematic lighting.`,
 
-	recraft: (ctx) => `Vector-style illustration infographic for ${ctx.platform} post.
+	recraft: (ctx) => `Create a vector-style illustration for ${ctx.placementLabel}.
 Topic: ${ctx.topic}
+Visual form: ${ctx.visualCommand} — ${ctx.visualCommandDescription}
 Style: consistent brand illustration, icon-based, flat design
 Elements: ${ctx.visualNotes}
 Text overlay: "${ctx.onImageText}" in modern sans-serif
-Color palette: limited 3-4 colors, brand-aligned
-Composition: ${ctx.aspectRatio}, clean lines, modern flat illustration.`
+Target canvas: ${ctx.width}x${ctx.height} pixels, ${ctx.aspectRatio} aspect ratio
+Color palette: limited 3-4 colors, brand-aligned. Clean lines, modern flat illustration.`
 };
 
 const SYSTEM_PROMPT = `You generate per-provider visual notes and on-image text for social media carousel slides.
 
-You will receive a slide context (topic, slide type, slide title, research context).
+You will receive a topic, target image placement, visual form, slide type, slide title, and research context.
 You must return a JSON object with exactly this shape:
 {
   "visual_notes": string (max 200 chars, describes composition, colors, style, focal point),
@@ -67,23 +63,28 @@ You must return a JSON object with exactly this shape:
 }
 
 Rules:
-- visual_notes must be concrete and visual (composition, colors, style, focal element)
+- visual_notes must follow the supplied visual form and be concrete and visual (composition, colors, style, focal element)
+- visual_notes must not add engineering facts, numbers, materials, dimensions, standards, citations, or claims
 - on_image_text should be short, punchy, in Indonesian
 - on_image_text must be a key phrase, NOT a full sentence
-- For hook slide: on_image_text should be the hook
-- For cta slide: on_image_text should be the call to action
-- For data slide: on_image_text should be the key data point
+- For hook slide: on_image_text should be the hook from the supplied context
+- For cta slide: on_image_text should be the call to action from the supplied context
+- For data slide: on_image_text should be the key data point from the supplied context
+- Do not invent any factual content absent from the topic and research context
 - Return ONLY the JSON object, no markdown`;
 
 interface SlideContext {
 	topic: string;
-	platform: string;
-	tone: string;
+	placementLabel: string;
+	visualCommand: string;
+	visualCommandDescription: string;
 	slide_type: string;
 	slide_title: string;
 	research_context: string;
 	slide_index: number;
 	slideCount: number;
+	width: number;
+	height: number;
 	aspectRatio: AspectRatio;
 	visualNotes: string;
 	onImageText: string;
@@ -97,27 +98,38 @@ export interface GenerateResult {
 export async function generateSlides(
 	topic: string,
 	researchBrief: string,
-	platform: string,
-	tone: string,
+	platformPlacement: string,
+	visualCommand: string,
 	slideCount: number
 ): Promise<GenerateResult> {
-	const synthesis = await synthesizeBriefs(topic, researchBrief, platform, tone, slideCount);
+	const placement = findPlatformPlacement(platformPlacement);
+	const command = findVisualCommand(visualCommand);
+	if (!placement) throw new Error('INVALID_PLATFORM_PLACEMENT');
+	if (!command) throw new Error('INVALID_VISUAL_COMMAND');
 
-	const aspectRatio = ASPECT_BY_PLATFORM[platform] ?? '1:1';
+	const synthesis = await synthesizeBriefs(
+		topic,
+		researchBrief,
+		platformPlacement,
+		visualCommand,
+		slideCount
+	);
 	const slides: GeneratedSlide[] = [];
 
-	for (let i = 0; i < synthesis.slides.length; i++) {
-		const brief = synthesis.slides[i] as SlideBrief;
+	for (const brief of synthesis.slides) {
 		const ctx: SlideContext = {
 			topic,
-			platform,
-			tone,
+			placementLabel: `${placement.platform} ${placement.placement}`,
+			visualCommand: command.value,
+			visualCommandDescription: command.description,
 			slide_type: brief.slide_type,
 			slide_title: brief.slide_title,
 			research_context: brief.research_context,
 			slide_index: brief.slide_index,
 			slideCount: synthesis.slides.length,
-			aspectRatio,
+			width: placement.width,
+			height: placement.height,
+			aspectRatio: placement.ratio as AspectRatio,
 			visualNotes: '',
 			onImageText: ''
 		};
@@ -132,7 +144,7 @@ export async function generateSlides(
 				prompt_text: PROVIDER_TEMPLATES[provider](ctx),
 				visual_notes: visualData.visual_notes,
 				on_image_text: visualData.on_image_text,
-				aspect_ratio: aspectRatio
+				aspect_ratio: ctx.aspectRatio
 			})
 		);
 
@@ -152,8 +164,9 @@ async function buildVisualNotes(
 	ctx: SlideContext
 ): Promise<{ visual_notes: string; on_image_text: string }> {
 	const userMessage = `Topic: ${ctx.topic}
-Platform: ${ctx.platform}
-Tone: ${ctx.tone}
+Target placement: ${ctx.placementLabel}
+Target canvas: ${ctx.width}x${ctx.height} pixels, ${ctx.aspectRatio}
+Visual form: ${ctx.visualCommand} — ${ctx.visualCommandDescription}
 Slide type: ${ctx.slide_type}
 Slide title: ${ctx.slide_title}
 Research context: ${ctx.research_context}

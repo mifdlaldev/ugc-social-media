@@ -5,6 +5,7 @@
 	import * as Select from '$lib/components/ui/select';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { goto } from '$app/navigation';
+	import { findPlatformPlacement } from '$lib/catalog/platformPlacements';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -138,10 +139,11 @@
 		return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
 	}
 
-	function platformColor(p: string): 'default' | 'secondary' | 'outline' {
-		if (p === 'instagram') return 'default';
-		if (p === 'facebook') return 'secondary';
-		return 'outline';
+	/** Compact placement label for the list: platform plus exact canvas. */
+	function placementBadge(value: string): string {
+		const placement = findPlatformPlacement(value);
+		if (!placement) return value;
+		return `${placement.platform} ${placement.width}×${placement.height}`;
 	}
 
 	function shortId(id: string): string {
@@ -228,8 +230,8 @@
 									<Badge variant={post.post_status === 'posted' ? 'default' : 'outline'}>
 										{post.post_status === 'posted' ? 'Sudah diposting' : 'Draft'}
 									</Badge>
-									<Badge variant={platformColor(post.platform)}>{post.platform}</Badge>
-									<Badge variant="outline">{post.tone}</Badge>
+									<Badge variant="secondary">{placementBadge(post.platform_placement)}</Badge>
+									<Badge variant="outline" class="font-mono">{post.visual_command}</Badge>
 									<Badge variant="outline">{post.slide_count} slides</Badge>
 									{#if post.posted_at}
 										<span class="font-mono text-xs text-text-muted">

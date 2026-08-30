@@ -4,9 +4,10 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Textarea } from '$lib/components/ui/textarea';
 	import { Badge } from '$lib/components/ui/badge';
-	import * as Select from '$lib/components/ui/select';
 	import * as Field from '$lib/components/ui/field';
 	import { goto } from '$app/navigation';
+	import VisualCommandSelect from '$lib/components/VisualCommandSelect.svelte';
+	import PlatformPlacementSelect from '$lib/components/PlatformPlacementSelect.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -16,26 +17,12 @@
 	const initial = data.post;
 
 	let topic = $state(initial.topic);
-	let platform = $state(initial.platform);
-	let tone = $state(initial.tone);
+	let platformPlacement = $state<string>(initial.platform_placement);
+	let visualCommand = $state<string>(initial.visual_command);
 	let slideCount = $state(initial.slide_count);
 	let excerpt = $state(initial.excerpt ?? '');
 	let error = $state('');
 	let loading = $state(false);
-
-	const platforms = [
-		{ value: 'instagram', label: 'Instagram' },
-		{ value: 'facebook', label: 'Facebook' },
-		{ value: 'linkedin', label: 'LinkedIn' }
-	] as const;
-
-	const tones = [
-		{ value: 'informatif', label: 'Informatif' },
-		{ value: 'detail', label: 'Detail' },
-		{ value: 'observatif', label: 'Observatif' },
-		{ value: 'menjual', label: 'Menjual' },
-		{ value: 'creative', label: 'Creative' }
-	] as const;
 
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
@@ -51,8 +38,8 @@
 				headers: { 'content-type': 'application/json' },
 				body: JSON.stringify({
 					topic: topic.trim(),
-					platform,
-					tone,
+					platform_placement: platformPlacement,
+					visual_command: visualCommand,
 					slide_count: slideCount,
 					excerpt: excerpt.trim() || undefined
 				})
@@ -86,8 +73,8 @@
 	<header class="mb-8">
 		<h1 class="text-display text-foreground">Ubah Detail Post</h1>
 		<p class="mt-2 text-text-secondary">
-			Perbarui topik, platform, tone, jumlah slide, atau ringkasan. Hasil riset dan prompt yang
-			sudah ada tidak dihapus.
+			Perbarui topik, bentuk visual, ukuran, jumlah slide, atau ringkasan. Hasil riset dan prompt
+			yang sudah ada tidak dihapus.
 		</p>
 	</header>
 
@@ -109,35 +96,8 @@
 					</Field.FieldDescription>
 				</Field.Field>
 
-				<div class="grid gap-6 sm:grid-cols-2">
-					<Field.Field>
-						<Field.FieldLabel>Platform</Field.FieldLabel>
-						<Select.Root type="single" bind:value={platform}>
-							<Select.Trigger>
-								{platforms.find((p) => p.value === platform)?.label ?? platform}
-							</Select.Trigger>
-							<Select.Content>
-								{#each platforms as p (p.value)}
-									<Select.Item value={p.value} label={p.label} />
-								{/each}
-							</Select.Content>
-						</Select.Root>
-					</Field.Field>
-
-					<Field.Field>
-						<Field.FieldLabel>Tone</Field.FieldLabel>
-						<Select.Root type="single" bind:value={tone}>
-							<Select.Trigger>
-								{tones.find((t) => t.value === tone)?.label ?? tone}
-							</Select.Trigger>
-							<Select.Content>
-								{#each tones as t (t.value)}
-									<Select.Item value={t.value} label={t.label} />
-								{/each}
-							</Select.Content>
-						</Select.Root>
-					</Field.Field>
-				</div>
+				<VisualCommandSelect bind:value={visualCommand} />
+				<PlatformPlacementSelect bind:value={platformPlacement} />
 
 				<Field.Field>
 					<Field.FieldLabel>Jumlah Slide (3-7)</Field.FieldLabel>
@@ -153,8 +113,8 @@
 						<Badge variant="default" class="font-mono">{slideCount} slides</Badge>
 					</div>
 					<Field.FieldDescription>
-						Mengubah jumlah slide tidak otomatis membuat ulang prompt. Generate ulang untuk
-						menerapkannya.
+						Mengubah bentuk visual, ukuran, atau jumlah slide tidak otomatis membuat ulang prompt.
+						Generate ulang untuk menerapkannya.
 					</Field.FieldDescription>
 				</Field.Field>
 
@@ -168,7 +128,7 @@
 						maxlength={300}
 					/>
 					<Field.FieldDescription>
-						Maks 300 karakter. Akan tampil di public feed.
+						Maks 300 karakter. Akan dipakai sebagai konteks tambahan.
 					</Field.FieldDescription>
 				</Field.Field>
 

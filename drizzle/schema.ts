@@ -39,14 +39,60 @@ export const posts = sqliteTable(
 			.notNull()
 			.references(() => users.id, { onDelete: 'restrict' }),
 		topic: text('topic').notNull(), // max 200 char, e.g. "Bata merah vs bata ringan"
-		platform: text('platform', { enum: ['instagram', 'facebook', 'linkedin'] })
-			.notNull()
-			.default('instagram'),
-		tone: text('tone', {
-			enum: ['detail', 'observatif', 'informatif', 'menjual', 'creative']
+		/**
+		 * Target image placement: platform + placement + exact canvas.
+		 * Catalog and provenance: src/lib/catalog/platformPlacements.ts,
+		 * sourced from docs/platform-image-size-reference.md.
+		 */
+		platform_placement: text('platform_placement', {
+			enum: [
+				'instagram-feed-square',
+				'instagram-feed-portrait',
+				'instagram-feed-landscape',
+				'instagram-stories',
+				'facebook-feed-square',
+				'facebook-feed-portrait',
+				'facebook-stories',
+				'x-instream-single-image',
+				'youtube-community-image',
+				'linkedin-single-image-portrait',
+				'linkedin-single-image-square',
+				'linkedin-single-image-landscape',
+				'pinterest-standard-pin'
+			]
 		})
 			.notNull()
-			.default('informatif'),
+			.default('instagram-feed-portrait'),
+		/**
+		 * Selected visual form for the generated infographic.
+		 * Catalog: src/lib/catalog/visualCommands.ts, sourced verbatim from
+		 * docs/prompt-command-reference.md. A command selects form only and
+		 * never licenses new engineering facts.
+		 */
+		visual_command: text('visual_command', {
+			enum: [
+				'/infographic',
+				'/scientificdiagram',
+				'/diagram',
+				'/schematic',
+				'/flowchart',
+				'/process',
+				'/comparison',
+				'/timeline',
+				'/conceptmap',
+				'/anatomy',
+				'/blueprint',
+				'/isometric',
+				'/explodedview',
+				'/cutaway',
+				'/crosssection',
+				'/layers',
+				'/scale',
+				'/handwrittennotes'
+			]
+		})
+			.notNull()
+			.default('/infographic'),
 		slide_count: integer('slide_count').notNull().default(5), // 3-7
 		excerpt: text('excerpt'), // auto-generated from research, max 300 char
 		/** Owner workflow state: has this been published to social media yet? */
@@ -127,7 +173,13 @@ export const provider_variants = sqliteTable(
 		prompt_text: text('prompt_text').notNull(),
 		visual_notes: text('visual_notes'),
 		on_image_text: text('on_image_text'),
-		aspect_ratio: text('aspect_ratio', { enum: ['1:1', '9:16', '4:5', '1.91:1'] })
+		/**
+		 * Target aspect ratio, taken from the post's selected placement catalog entry.
+		 * Values cover every ratio present in src/lib/catalog/platformPlacements.ts.
+		 */
+		aspect_ratio: text('aspect_ratio', {
+			enum: ['1:1', '9:16', '4:5', '1.91:1', '16:9', '2:3']
+		})
 			.notNull()
 			.default('1:1'),
 		created_at: integer('created_at', { mode: 'timestamp' })

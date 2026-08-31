@@ -1,4 +1,4 @@
-import { chatCompletion } from './openRouterClient';
+import { chatCompletion } from './llmClient';
 import { findVisualCommand } from '$lib/catalog/visualCommands';
 import { findPlatformPlacement } from '$lib/catalog/platformPlacements';
 

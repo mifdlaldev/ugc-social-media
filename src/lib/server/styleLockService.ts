@@ -1,4 +1,4 @@
-import { chatCompletion } from './openRouterClient';
+import { chatCompletion } from './llmClient';
 import { config } from './config';
 import { findPlatformPlacement } from '$lib/catalog/platformPlacements';
 import { findVisualCommand } from '$lib/catalog/visualCommands';
@@ -97,7 +97,7 @@ Produce the style specification. Output valid JSON only.`;
 	const styleLock = parseStyleLockResponse(content);
 	assertAestheticOnly(styleLock);
 
-	return { style_lock: styleLock, model_id: config.openRouterModel, raw_output: content };
+	return { style_lock: styleLock, model_id: config.llmModel, raw_output: content };
 }
 
 /** Parses the model response defensively; never returns empty text. */

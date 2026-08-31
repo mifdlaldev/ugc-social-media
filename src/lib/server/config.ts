@@ -3,8 +3,9 @@
 
 type AppEnv = {
 	DATABASE_URL?: string;
-	OPENROUTER_API_KEY?: string;
-	OPENROUTER_MODEL?: string;
+	LLM_BASE_URL?: string;
+	LLM_API_KEY?: string;
+	LLM_MODEL?: string;
 	SESSION_SECRET?: string;
 	ADMIN_PASSWORD_HASH?: string;
 	YOU_API_KEY?: string;
@@ -36,13 +37,18 @@ export const config = {
 		if (!v) throw new Error('ADMIN_PASSWORD_HASH is not configured');
 		return v;
 	},
-	get openRouterApiKey(): string {
-		const v = value('OPENROUTER_API_KEY');
-		if (!v) throw new Error('OPENROUTER_API_KEY is not configured');
+	get llmBaseUrl(): string {
+		return (value('LLM_BASE_URL') ?? 'https://router.bynara.id/v1').replace(/\/+$/, '');
+	},
+	get llmApiKey(): string {
+		const v = value('LLM_API_KEY');
+		if (!v) throw new Error('LLM_API_KEY is not configured');
 		return v;
 	},
-	get openRouterModel(): string {
-		return value('OPENROUTER_MODEL') ?? 'openrouter/auto';
+	get llmModel(): string {
+		const v = value('LLM_MODEL');
+		if (!v) throw new Error('LLM_MODEL is not configured');
+		return v;
 	},
 	get youApiKey(): string {
 		const v = value('YOU_API_KEY');

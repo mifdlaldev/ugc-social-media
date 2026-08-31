@@ -13,8 +13,8 @@ assets = { binding = "ASSETS", directory = ".svelte-kit/cloudflare" }
 # database_id = "<paste-id-here>"
 
 # Secrets (set via `wrangler secret put` — never commit values):
-#   OPENROUTER_API_KEY
-#   OPENROUTER_MODEL
+#   LLM_API_KEY
+#   LLM_MODEL
 #   SESSION_SECRET
 #   ADMIN_PASSWORD_HASH
 #   DATABASE_URL

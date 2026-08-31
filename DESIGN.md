@@ -9,7 +9,7 @@ The product's primary transformation is:
 ```text
 Creator's article + selected prompt preset
         ↓
-Text LLM through OpenRouter
+Text LLM through an OpenAI-compatible gateway
         ↓
 Validated structured prompt blocks
         ↓
@@ -82,7 +82,7 @@ Browser
           ├── Prompt generation service
           │       ├── Input normalization
           │       ├── Article-only system/user prompt
-          │       ├── OpenRouter text request
+          │       ├── Gateway text request
           │       ├── Defensive JSON extraction
           │       ├── Schema validation
           │       └── Fact-fidelity guard
@@ -96,8 +96,8 @@ Browser
 ### Runtime boundaries
 
 - Secrets are read from runtime environment/bindings, never from client code.
-- The browser never calls OpenRouter directly.
-- The browser never receives the OpenRouter API key.
+- The browser never calls the LLM gateway directly.
+- The browser never receives the LLM API key.
 - Database access is server-side only.
 - AI output is untrusted input and must be parsed and validated before it is returned or persisted as a successful result.
 
@@ -271,7 +271,7 @@ Status: **reference material, not an approved feature.** The catalog does not ch
 
 - Article title and body supplied by the creator.
 - Optional approved prompt preset.
-- Server-selected OpenRouter text model from `OPENROUTER_MODEL`.
+- Server-selected text model from `LLM_MODEL`.
 
 ### System instruction requirements
 
@@ -288,7 +288,7 @@ The generation system instruction must state that:
 1. Validate input length and required fields.
 2. Normalize article and preset data.
 3. Create an input hash for the attempt record.
-4. Send a server-side request to the verified OpenRouter text endpoint using the configured model.
+4. Send a server-side request to the verified text endpoint using the configured model.
 5. Persist the raw response and metadata, without secrets.
 6. Remove an optional markdown code fence or surrounding prose defensively.
 7. Parse JSON.
@@ -300,7 +300,7 @@ The generation system instruction must state that:
 ### Failure behavior
 
 - Missing configuration: safe server error; do not expose secret values.
-- OpenRouter failure or timeout: retryable user-facing error.
+- Gateway failure or timeout: retryable user-facing error.
 - Invalid JSON: retryable error explaining that the model response could not be structured.
 - Schema mismatch: retryable error; do not return empty blocks.
 - Fidelity guard failure: do not present the result as successful; persist the attempt for review.
@@ -356,7 +356,7 @@ All Elysia routes must use explicit request validation and appropriate HTTP stat
 - Deploy to Cloudflare Workers.
 - Bind a Cloudflare D1 database.
 - Use Drizzle's D1-compatible driver.
-- Set `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`, `SESSION_SECRET`, and `ADMIN_PASSWORD_HASH` as secrets/configuration through the deployment system.
+- Set `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`, `SESSION_SECRET`, and `ADMIN_PASSWORD_HASH` as secrets/configuration through the deployment system.
 - Do not put real values in `wrangler.toml`, source code, documentation, or committed example files.
 
 The exact SvelteKit adapter, Elysia Worker adapter configuration, D1 database identifier, and migration command must be verified against the installed package versions and Cloudflare documentation during scaffolding. Do not guess them in advance.
@@ -367,7 +367,7 @@ The exact SvelteKit adapter, Elysia Worker adapter configuration, D1 database id
 
 - Single creator first; public feed and public reading are part of the MVP direction.
 - Text LLM only; no in-app image generation.
-- OpenRouter is the AI gateway.
+- The gateway is an OpenAI-compatible endpoint (`LLM_BASE_URL`).
 - Article facts are the sole factual source for generated prompts.
 - Structured prompt blocks are the canonical output.
 - Svelte, ElysiaJS, Bun, Drizzle, SQLite, shadcn-svelte, and Cloudflare Workers are fixed choices.
@@ -381,7 +381,7 @@ The exact SvelteKit adapter, Elysia Worker adapter configuration, D1 database id
 ### Must be confirmed before implementation
 
 - Exact Cloudflare/SvelteKit/Elysia integration after dependencies are installed.
-- Exact OpenRouter text model identifier from runtime configuration. Model IDs must never be guessed or hardcoded as facts in the application.
+- Exact gateway text model identifier from runtime configuration (`LLM_MODEL`). Model IDs must never be guessed or hardcoded as facts in the application.
 - Deletion mechanism for the 90-day retention (scheduled Cloudflare cron vs. on-write cleanup).
 
 ## 13. Change Control

@@ -10,8 +10,9 @@ declare global {
 		interface Platform {
 			env: {
 				DATABASE_URL: string;
-				OPENROUTER_API_KEY: string;
-				OPENROUTER_MODEL: string;
+				LLM_API_KEY: string;
+				LLM_MODEL: string;
+				LLM_BASE_URL?: string;
 				SESSION_SECRET: string;
 				ADMIN_PASSWORD_HASH: string;
 				DB: D1Database;

@@ -6,6 +6,7 @@
 	import { goto } from '$app/navigation';
 	import { findPlatformPlacement } from '$lib/catalog/platformPlacements';
 	import StyleLockPanel from '$lib/components/StyleLockPanel.svelte';
+	import VisualCommandRecommendationPanel from '$lib/components/VisualCommandRecommendationPanel.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -18,6 +19,9 @@
 	 */
 	let localStyleLock = $state<string | null>(null);
 	let styleLock = $derived(localStyleLock ?? data.styleLock);
+	/** Same pattern for an applied command: reflect it before the load refreshes. */
+	let localCommand = $state<string | null>(null);
+	let visualCommand = $derived(localCommand ?? data.post.visual_command);
 	let researching = $state(false);
 	let approveError = $state('');
 
@@ -87,7 +91,7 @@
 			<h1 class="text-display truncate font-mono text-foreground">{post.topic}</h1>
 			<div class="mt-3 flex flex-wrap items-center gap-2 text-text-secondary">
 				<Badge variant="secondary">{placementLabel(post.platform_placement)}</Badge>
-				<Badge variant="outline" class="font-mono">{post.visual_command}</Badge>
+				<Badge variant="outline" class="font-mono">{visualCommand}</Badge>
 				<Badge variant="outline">{post.slide_count} slides</Badge>
 			</div>
 		</div>
@@ -123,6 +127,18 @@
 		initialStyleLock={data.styleLock}
 		canGenerate={sources.length > 0}
 		onChange={(value) => (localStyleLock = value)}
+	/>
+
+	<VisualCommandRecommendationPanel
+		postId={post.id}
+		currentCommand={visualCommand}
+		canRecommend={sources.length > 0}
+		initialPrimary={data.recommendation
+			? { command: data.recommendation.primary_command, reason: data.recommendation.primary_reason }
+			: null}
+		initialAlternatives={data.recommendation?.alternatives ?? []}
+		initialPerSlide={data.recommendation?.per_slide ?? null}
+		onApply={(value) => (localCommand = value)}
 	/>
 
 	{#if sources.length > 0}

@@ -1,6 +1,6 @@
 import { findPlatformPlacement } from '$lib/catalog/platformPlacements';
 import { findVisualCommand } from '$lib/catalog/visualCommands';
-import { chatCompletion } from './openRouterClient';
+import { chatCompletion } from './llmClient';
 import { synthesizeBriefs, type SlideBrief, type SynthesisResult } from './synthesisService';
 
 export type Provider = 'gpt-image' | 'nano-banana' | 'recraft';
@@ -200,6 +200,14 @@ export interface GenerateResult {
 	slides: GeneratedSlide[];
 }
 
+/**
+ * Gap between per-slide calls. The free tier allows a limited number of requests
+ * per minute, and one carousel issues a synthesis call plus one call per slide
+ * back to back, so pacing the loop keeps a normal run under the limit instead of
+ * relying on the client's retry path.
+ */
+export const SLIDE_CALL_SPACING_MS = 1200;
+
 export async function generateSlides(
 	topic: string,
 	researchBrief: string,
@@ -224,6 +232,9 @@ export async function generateSlides(
 	const slides: GeneratedSlide[] = [];
 
 	for (const brief of synthesis.slides) {
+		if (slides.length > 0) {
+			await new Promise((resolve) => setTimeout(resolve, SLIDE_CALL_SPACING_MS));
+		}
 		const ctx: SlideContext = {
 			topic,
 			placementLabel: `${placement.platform} ${placement.placement}`,

@@ -132,7 +132,7 @@ export const actions: Actions = {
 			await db.insert(generation_attempts).values({
 				post_id: postId,
 				input_hash: inputHash,
-				model_id: config.openRouterModel,
+				model_id: config.llmModel,
 				raw_output: JSON.stringify(result.synthesis),
 				parsed_result: JSON.stringify(result.slides),
 				status: 'success'

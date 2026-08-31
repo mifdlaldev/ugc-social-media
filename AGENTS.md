@@ -17,7 +17,7 @@ Build a **UGC social media platform for civil engineering, construction, and arc
 Core value loop:
 
 1. Owner writes an **educational article** (teknik sipil / konstruksi / arsitektur).
-2. The app sends the article to a **text LLM via OpenRouter**.
+2. The app sends the article to a **text LLM via an OpenAI-compatible gateway** (`LLM_BASE_URL`).
 3. The LLM converts the article into **structured, copy-ready prompt blocks** (visual style, composition, color palette, typography, layout, on-image text, aspect ratio, per-tool notes).
 4. The owner copies the blocks into an **external image generator** (ChatGPT/GPT Image, Nano Banana / Gemini, etc.).
 5. The generated **infographic** is posted to Instagram / Facebook.
@@ -53,16 +53,16 @@ Before editing any code, read:
 
 ## Fixed Tech Stack
 
-| Concern         | Choice                 | Notes                                                                                                                                        |
-| --------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Frontend        | **Svelte** (SvelteKit) | Svelte 5 runes; do NOT use legacy `$:` / `export let` patterns                                                                               |
-| Backend         | **ElysiaJS**           | Elysia ~1.x, TypeScript-first                                                                                                                |
-| Package manager | **Bun**                | `bun.lockb`; never commit `package-lock.json` / `yarn.lock`                                                                                  |
-| ORM             | **Drizzle ORM**        | schema in `drizzle/schema.ts`                                                                                                                |
-| Database        | **SQLite**             | Local dev: `bun:sqlite` / `libsql`. Production on Cloudflare: **D1** (Cloudflare's serverless SQLite). Drizzle D1 driver (`drizzle-orm/d1`). |
-| Components      | **shadcn-svelte**      | via `bunx shadcn-svelte@latest add <component>`                                                                                              |
-| Deploy          | **Cloudflare Workers** | wrangler + `wrangler.toml`; D1 binding for production                                                                                        |
-| AI provider     | **OpenRouter**         | text LLM via `/api/v1/chat/completions`; API key from secret/env                                                                             |
+| Concern         | Choice                        | Notes                                                                                                                                        |
+| --------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Frontend        | **Svelte** (SvelteKit)        | Svelte 5 runes; do NOT use legacy `$:` / `export let` patterns                                                                               |
+| Backend         | **ElysiaJS**                  | Elysia ~1.x, TypeScript-first                                                                                                                |
+| Package manager | **Bun**                       | `bun.lockb`; never commit `package-lock.json` / `yarn.lock`                                                                                  |
+| ORM             | **Drizzle ORM**               | schema in `drizzle/schema.ts`                                                                                                                |
+| Database        | **SQLite**                    | Local dev: `bun:sqlite` / `libsql`. Production on Cloudflare: **D1** (Cloudflare's serverless SQLite). Drizzle D1 driver (`drizzle-orm/d1`). |
+| Components      | **shadcn-svelte**             | via `bunx shadcn-svelte@latest add <component>`                                                                                              |
+| Deploy          | **Cloudflare Workers**        | wrangler + `wrangler.toml`; D1 binding for production                                                                                        |
+| AI provider     | **OpenAI-compatible gateway** | text LLM via `{LLM_BASE_URL}/chat/completions`; base URL, key, and model all from env. Never hardcode a provider or model id.                |
 
 ## Repository Layout (actual)
 
@@ -180,8 +180,9 @@ The prompt-generation service (`src/lib/server/promptGenerator.ts`) is the heart
 | Var                   | Required  | Description                                                 |
 | --------------------- | --------- | ----------------------------------------------------------- |
 | `DATABASE_URL`        | local dev | local SQLite path (e.g. `file:./data/local.db`)             |
-| `OPENROUTER_API_KEY`  | yes       | OpenRouter key (production: Cloudflare secret)              |
-| `OPENROUTER_MODEL`    | yes       | text model id (e.g. `openrouter/auto`), verified at runtime |
+| `LLM_BASE_URL`        | yes       | OpenAI-compatible base URL, no trailing `/chat/completions` |
+| `LLM_API_KEY`         | yes       | gateway key (production: Cloudflare secret)                 |
+| `LLM_MODEL`           | yes       | text model id; required, never defaulted or guessed         |
 | `SESSION_SECRET`      | yes       | signs owner session cookies                                 |
 | `ADMIN_PASSWORD_HASH` | yes       | owner login password hash (MVP single-creator)              |
 | `ALLOWED_ORIGINS`     | dev       | CORS allowlist (dev only; same-origin in prod)              |

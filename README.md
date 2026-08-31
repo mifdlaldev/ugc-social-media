@@ -7,28 +7,28 @@ A **single-creator web app** that turns your educational articles (teknik sipil,
 ## How It Works
 
 1. **You write an article** — e.g. "Kenapa kolom lebih kokoh daripada dinding tanpa struktur?"
-2. **The app converts it** — via a text LLM on **OpenRouter** into **structured prompt blocks**: visual style, composition, color palette, typography, layout, on-image text, aspect ratio, and per-tool notes.
+2. **The app converts it** — via a text LLM on an **OpenAI-compatible gateway** (`LLM_BASE_URL`) into **structured prompt blocks**: visual style, composition, color palette, typography, layout, on-image text, aspect ratio, and per-tool notes.
 3. **You copy the blocks** — into ChatGPT/GPT Image, Nano Banana, or another generator.
 4. **You post the infographic** — to Instagram / Facebook.
 
 ## Tech Stack (fixed — see `AGENTS.md`)
 
-| Layer           | Choice                                                           |
-| --------------- | ---------------------------------------------------------------- |
-| Frontend        | SvelteKit (Svelte 5 runes, Tailwind v4)                          |
-| Backend         | ElysiaJS (mounted at `/api` via hooks.server.ts)                 |
-| Package manager | Bun                                                              |
-| ORM             | Drizzle ORM                                                      |
-| Database        | SQLite (local: `bun:sqlite`/`libsql`; production: Cloudflare D1) |
-| Components      | shadcn-svelte                                                    |
-| Deploy          | Cloudflare Workers (wrangler)                                    |
-| AI provider     | OpenRouter (text → prompt blocks)                                |
+| Layer           | Choice                                                                |
+| --------------- | --------------------------------------------------------------------- |
+| Frontend        | SvelteKit (Svelte 5 runes, Tailwind v4)                               |
+| Backend         | ElysiaJS (mounted at `/api` via hooks.server.ts)                      |
+| Package manager | Bun                                                                   |
+| ORM             | Drizzle ORM                                                           |
+| Database        | SQLite (local: `bun:sqlite`/`libsql`; production: Cloudflare D1)      |
+| Components      | shadcn-svelte                                                         |
+| Deploy          | Cloudflare Workers (wrangler)                                         |
+| AI provider     | OpenAI-compatible gateway (text → prompt blocks), from `LLM_BASE_URL` |
 
 ## Quick Start
 
 ```bash
 bun install
-cp .env.example .env.local   # fill DATABASE_URL, OPENROUTER_API_KEY, etc.
+cp .env.example .env.local   # fill DATABASE_URL, LLM_BASE_URL, LLM_API_KEY, LLM_MODEL, etc.
 bun run db:migrate
 bun dev
 ```

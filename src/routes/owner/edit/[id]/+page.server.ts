@@ -5,6 +5,8 @@ import { db } from '$lib/server/db';
 import { post_research_sources } from '$lib/server/schema';
 import { eq } from 'drizzle-orm';
 import { compileResearch } from '$lib/server/researchService';
+import { desc } from 'drizzle-orm';
+import { visual_command_recommendations } from '$lib/server/schema';
 
 export const load: PageServerLoad = async ({ locals, params, url }) => {
 	if (!locals.session) {
@@ -18,7 +20,18 @@ export const load: PageServerLoad = async ({ locals, params, url }) => {
 		.select()
 		.from(post_research_sources)
 		.where(eq(post_research_sources.post_id, post.id));
-	return { post, sources, styleLock: post.style_lock ?? '' };
+	const [recommendation] = await db
+		.select()
+		.from(visual_command_recommendations)
+		.where(eq(visual_command_recommendations.post_id, post.id))
+		.orderBy(desc(visual_command_recommendations.created_at))
+		.limit(1);
+	return {
+		post,
+		sources,
+		styleLock: post.style_lock ?? '',
+		recommendation: recommendation ?? null
+	};
 };
 
 export const actions: Actions = {

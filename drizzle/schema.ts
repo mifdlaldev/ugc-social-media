@@ -210,6 +210,37 @@ export const provider_variants = sqliteTable(
 	]
 );
 
+// ---- visual_command_recommendations (advisory command advice per post) ----
+export const visual_command_recommendations = sqliteTable(
+	'visual_command_recommendations',
+	{
+		id: uuid(),
+		post_id: text('post_id')
+			.notNull()
+			.references(() => posts.id, { onDelete: 'cascade' }),
+		topic_snapshot: text('topic_snapshot').notNull(),
+		model_id: text('model_id').notNull(),
+		primary_command: text('primary_command').notNull(),
+		primary_reason: text('primary_reason').notNull(),
+		/** JSON array of { command, reason }, at most two entries. */
+		alternatives: text('alternatives', { mode: 'json' }).$type<
+			{ command: string; reason: string }[]
+		>(),
+		/** JSON array of { slide_index, command, reason }; null when not supplied. */
+		per_slide: text('per_slide', { mode: 'json' }).$type<
+			{ slide_index: number; command: string; reason: string }[]
+		>(),
+		raw_output: text('raw_output'),
+		created_at: integer('created_at', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`(unixepoch())`)
+	},
+	(table) => [
+		index('command_rec_post_idx').on(table.post_id),
+		index('command_rec_created_idx').on(table.created_at)
+	]
+);
+
 // ---- generation_attempts (one record per prompt-generation request) ----
 export const generation_attempts = sqliteTable(
 	'generation_attempts',
@@ -247,3 +278,4 @@ export type PromptSlide = typeof prompt_slides.$inferSelect;
 export type ProviderVariant = typeof provider_variants.$inferSelect;
 export type GenerationAttempt = typeof generation_attempts.$inferSelect;
 export type NewGenerationAttempt = typeof generation_attempts.$inferInsert;
+export type VisualCommandRecommendation = typeof visual_command_recommendations.$inferSelect;

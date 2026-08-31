@@ -1,5 +1,5 @@
 import { Elysia, t } from 'elysia';
-import { eq, inArray } from 'drizzle-orm';
+import { desc, eq, inArray } from 'drizzle-orm';
 import { requireOwner } from './auth';
 import { db } from './db';
 import {
@@ -7,11 +7,15 @@ import {
 	post_research_sources,
 	prompt_slides,
 	provider_variants,
-	posts
+	visual_command_recommendations,
+	posts,
+	type Post,
+	type VisualCommandRecommendation
 } from '$lib/server/schema';
 import { getOwnerId, getOwnerPostById, listAllPosts } from './posts';
 import { compileResearch } from './researchService';
 import { generateSlides } from './promptGenerator';
+import { recommendVisualCommand } from './visualCommandRecommendation';
 import {
 	STYLE_LOCK_MAX_LENGTH,
 	generateStyleLock,
@@ -19,7 +23,11 @@ import {
 } from './styleLockService';
 import { config } from './config';
 import { createHash } from 'node:crypto';
-import { DEFAULT_VISUAL_COMMAND, VISUAL_COMMAND_VALUES } from '$lib/catalog/visualCommands';
+import {
+	DEFAULT_VISUAL_COMMAND,
+	VISUAL_COMMAND_VALUES,
+	isVisualCommand
+} from '$lib/catalog/visualCommands';
 import {
 	DEFAULT_PLATFORM_PLACEMENT,
 	PLATFORM_PLACEMENT_VALUES
@@ -46,6 +54,17 @@ function buildResearchBrief(
 				`[${i + 1}] ${s.source_title ?? ''}\n${s.source_snippet ?? ''}\nURL: ${s.source_url}`
 		)
 		.join('\n\n');
+}
+
+/** Shared response shape for stored and freshly generated recommendations. */
+function recommendationPayload(row: VisualCommandRecommendation) {
+	return {
+		success: true as const,
+		primary: { command: row.primary_command, reason: row.primary_reason },
+		alternatives: row.alternatives ?? [],
+		per_slide: row.per_slide ?? null,
+		created_at: row.created_at
+	};
 }
 
 export const postsApi = new Elysia({ prefix: '/api' })
@@ -346,7 +365,7 @@ export const postsApi = new Elysia({ prefix: '/api' })
 			await db.insert(generation_attempts).values({
 				post_id: post.id,
 				input_hash: inputHash,
-				model_id: config.openRouterModel,
+				model_id: config.llmModel,
 				raw_output: JSON.stringify(result.synthesis),
 				parsed_result: JSON.stringify(result.slides),
 				status: 'success'
@@ -373,4 +392,113 @@ export const postsApi = new Elysia({ prefix: '/api' })
 			.where(inArray(provider_variants.slide_id, slideIds));
 		set.status = 200;
 		return { slides, variants };
-	});
+	})
+	.get('/posts/:id/visual-command-recommendation', async ({ request, params, set }) => {
+		await requireOwner(request);
+		const post = await getOwnerPostById(params.id);
+		if (!post) {
+			set.status = 404;
+			return { error: 'Post not found' };
+		}
+		const existing = await db
+			.select()
+			.from(visual_command_recommendations)
+			.where(eq(visual_command_recommendations.post_id, post.id))
+			.orderBy(desc(visual_command_recommendations.created_at))
+			.limit(1);
+		if (existing.length > 0) {
+			set.status = 200;
+			return existing[0];
+		}
+		set.status = 200;
+		return null;
+	})
+	.post(
+		'/posts/:id/visual-command-recommendation',
+		async ({ request, params, body, set }) => {
+			await requireOwner(request);
+			const post = await getOwnerPostById(params.id);
+			if (!post) {
+				set.status = 404;
+				return { success: false, error: 'Post not found' };
+			}
+			const existing = await db
+				.select()
+				.from(visual_command_recommendations)
+				.where(eq(visual_command_recommendations.post_id, post.id))
+				.orderBy(desc(visual_command_recommendations.created_at))
+				.limit(1);
+			if (!body.regenerate && existing[0]) {
+				set.status = 200;
+				return recommendationPayload(existing[0]);
+			}
+			const sources = await db
+				.select()
+				.from(post_research_sources)
+				.where(eq(post_research_sources.post_id, post.id));
+			if (sources.length === 0) {
+				set.status = 400;
+				return { success: false, error: 'No research sources. Run and approve research first.' };
+			}
+			try {
+				const result = await recommendVisualCommand(
+					post.topic,
+					buildResearchBrief(sources),
+					post.slide_count
+				);
+				const [stored] = await db
+					.insert(visual_command_recommendations)
+					.values({
+						post_id: post.id,
+						topic_snapshot: post.topic,
+						model_id: result.model_id,
+						primary_command: result.primary.command,
+						primary_reason: result.primary.reason,
+						alternatives: result.alternatives.length > 0 ? result.alternatives : null,
+						per_slide: result.per_slide,
+						raw_output: result.raw_output
+					})
+					.returning();
+				set.status = 200;
+				return stored
+					? recommendationPayload(stored)
+					: { success: false, error: 'Recommendation not stored' };
+			} catch (err) {
+				const message = err instanceof Error ? err.message : 'Unknown error';
+				set.status = 500;
+				return { success: false, error: message };
+			}
+		},
+		{
+			body: t.Object({ regenerate: t.Optional(t.Boolean()) })
+		}
+	)
+	.post(
+		'/posts/:id/apply-visual-command',
+		async ({ request, params, body, set }) => {
+			await requireOwner(request);
+			const post = await getOwnerPostById(params.id);
+			if (!post) {
+				set.status = 404;
+				return { success: false, error: 'Post not found' };
+			}
+			if (!isVisualCommand(body.visual_command)) {
+				set.status = 422;
+				return { success: false, error: 'Unknown visual command' };
+			}
+			// Validated against the catalog above, so the stored enum accepts it.
+			const command = body.visual_command as NonNullable<Post['visual_command']>;
+			const [updated] = await db
+				.update(posts)
+				.set({ visual_command: command })
+				.where(eq(posts.id, post.id))
+				.returning();
+			set.status = 200;
+			return { success: true, visual_command: updated?.visual_command ?? command };
+		},
+		{
+			body: t.Object({
+				visual_command: t.String()
+			})
+		}
+	);

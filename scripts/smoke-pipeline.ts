@@ -25,6 +25,7 @@ const { db } = await import('../src/lib/server/db');
 const { posts, prompt_slides, provider_variants } = await import('../drizzle/schema');
 const { findPlatformPlacement } = await import('../src/lib/catalog/platformPlacements');
 const { findFactualTerms } = await import('../src/lib/server/styleLockService');
+const { isVisualCommand } = await import('../src/lib/catalog/visualCommands');
 const { eq, inArray } = await import('drizzle-orm');
 
 const PLACEMENT = 'pinterest-standard-pin';
@@ -151,13 +152,63 @@ try {
 		got.has_style_lock === true && got.style_lock === editedLock
 	);
 
-	console.log('\n6. generate slides');
+	console.log('\n6. visual command recommendation');
+	const recRes = await call(`/api/posts/${postId}/visual-command-recommendation`, {
+		method: 'POST',
+		body: JSON.stringify({ regenerate: true })
+	});
+	const rec = (await recRes.json()) as {
+		success?: boolean;
+		primary?: { command: string; reason: string };
+		alternatives?: { command: string; reason: string }[];
+		per_slide?: { slide_index: number; command: string; reason: string }[] | null;
+		error?: string;
+	};
+	check('recommendation succeeded', recRes.status === 200 && rec.success === true, rec.error ?? '');
+	check(
+		'primary command is in the catalog',
+		typeof rec.primary?.command === 'string' && isVisualCommand(rec.primary.command),
+		rec.primary?.command ?? 'none'
+	);
+	check(
+		'primary reason is non-empty',
+		(rec.primary?.reason ?? '').trim().length > 0,
+		rec.primary?.reason ?? ''
+	);
+	check(
+		'every alternative is in the catalog',
+		(rec.alternatives ?? []).every((a) => isVisualCommand(a.command)),
+		(rec.alternatives ?? []).map((a) => a.command).join(', ')
+	);
+	check(
+		'every per-slide command is in the catalog',
+		(rec.per_slide ?? []).every((s) => isVisualCommand(s.command)),
+		(rec.per_slide ?? []).map((s) => s.command).join(', ')
+	);
+	const afterRec = await db.select().from(posts).where(eq(posts.id, postId));
+	check(
+		'recommendation did not mutate the stored command',
+		afterRec[0]?.visual_command === COMMAND,
+		`${afterRec[0]?.visual_command}`
+	);
+	const cachedRes = await call(`/api/posts/${postId}/visual-command-recommendation`, {
+		method: 'POST',
+		body: JSON.stringify({ regenerate: false })
+	});
+	const cached = (await cachedRes.json()) as { primary?: { command: string } };
+	check(
+		'stored recommendation is returned without regenerating',
+		cachedRes.status === 200 && cached.primary?.command === rec.primary?.command,
+		`${cached.primary?.command}`
+	);
+
+	console.log('\n7. generate slides');
 	const genRes = await call(`/api/posts/${postId}/generate`, { method: 'POST' });
 	const gen = (await genRes.json()) as { success?: boolean; slideCount?: number; error?: string };
 	check('generate succeeded', genRes.status === 200 && gen.success === true, gen.error ?? '');
 	check('slide count matches request', gen.slideCount === SLIDES, `${gen.slideCount} slides`);
 
-	console.log('\n7. inspect stored variants');
+	console.log('\n8. inspect stored variants');
 	const slides = await db.select().from(prompt_slides).where(eq(prompt_slides.post_id, postId));
 	check('slides persisted', slides.length === SLIDES, `${slides.length} rows`);
 	check('first slide is hook', slides.find((s) => s.slide_index === 0)?.slide_type === 'hook');

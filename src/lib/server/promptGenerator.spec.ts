@@ -32,6 +32,11 @@ function contextFor(placementValue: string, commandValue: string): SlideContext 
 		visualCommandDescription: command.description,
 		slide_type: 'hook',
 		slide_title: 'Bata Merah vs Bata Ringan',
+		slideSubtitle: 'Perbandingan untuk dinding non-struktural',
+		slideExplanation:
+			'Bata merah dibakar dari tanah lempung, sedangkan bata ringan dicetak dari campuran berpori.',
+		visualLabels: 'bata merah | bata ringan | arah beban',
+		slideTakeaway: 'Pilih material sesuai kebutuhan beban dan waktu pasang.',
 		research_context: 'context from approved research',
 		slide_index: 0,
 		slideCount: 5,
@@ -135,6 +140,38 @@ describe('shared prompt rules', () => {
 		expect(buildProviderPrompt('gpt-image', ctx)).toContain('Render text accurately');
 		expect(buildProviderPrompt('nano-banana', ctx)).toContain('Cinematic lighting');
 		expect(buildProviderPrompt('recraft', ctx)).toContain('vector-style illustration');
+	});
+});
+
+describe('teaching block', () => {
+	const ctx = contextFor('instagram-feed-portrait', '/comparison');
+
+	it('emits labelled teaching lines on every provider', () => {
+		for (const provider of PROVIDERS) {
+			const prompt = buildProviderPrompt(provider, ctx);
+			expect(prompt, provider).toContain('Slide title: Bata Merah vs Bata Ringan');
+			expect(prompt, provider).toContain('Slide subtitle: Perbandingan untuk dinding');
+			expect(prompt, provider).toContain('Slide explanation: Bata merah dibakar');
+			expect(prompt, provider).toContain('Visual labels: bata merah | bata ringan');
+			expect(prompt, provider).toContain('Slide takeaway: Pilih material');
+		}
+	});
+
+	it('omits optional lines when their fields are empty', () => {
+		const sparse = { ...ctx, slideSubtitle: '', visualLabels: '', slideTakeaway: '' };
+		const prompt = buildProviderPrompt('gpt-image', sparse);
+		expect(prompt).not.toContain('Slide subtitle:');
+		expect(prompt).not.toContain('Visual labels:');
+		expect(prompt).not.toContain('Slide takeaway:');
+		// The two required lines survive.
+		expect(prompt).toContain('Slide title:');
+		expect(prompt).toContain('Slide explanation:');
+	});
+
+	it('keeps the explanation distinct from the rendered on-image text', () => {
+		const prompt = buildProviderPrompt('gpt-image', ctx);
+		expect(prompt).toContain('Slide explanation:');
+		expect(prompt).toContain('On-image text: "Mana Jawaranya?"');
 	});
 });
 

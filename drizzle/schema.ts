@@ -157,6 +157,17 @@ export const prompt_slides = sqliteTable(
 			.notNull()
 			.default('custom'),
 		slide_title: text('slide_title'),
+		/** Optional one-line scope, condition, or consequence. */
+		slide_subtitle: text('slide_subtitle'),
+		/**
+		 * Short teaching explanation. Every factual statement must originate from
+		 * approved research or the owner topic, with source qualifiers preserved.
+		 */
+		slide_explanation: text('slide_explanation'),
+		/** Delimited list of labels for components, arrows, units, or stages shown. */
+		visual_labels: text('visual_labels'),
+		/** One concise transferable point. */
+		slide_takeaway: text('slide_takeaway'),
 		research_context: text('research_context'),
 		created_at: integer('created_at', { mode: 'timestamp' })
 			.notNull()

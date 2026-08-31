@@ -165,6 +165,11 @@ try {
 		'last slide is cta',
 		slides.find((s) => s.slide_index === SLIDES - 1)?.slide_type === 'cta'
 	);
+	check(
+		'every slide has a headline and explanation',
+		slides.every((s) => Boolean(s.slide_title?.trim()) && Boolean(s.slide_explanation?.trim())),
+		`${slides.filter((s) => Boolean(s.slide_title?.trim()) && Boolean(s.slide_explanation?.trim())).length}/${slides.length}`
+	);
 
 	const variants = await db
 		.select()
@@ -226,6 +231,10 @@ try {
 	check(
 		'every variant labels the style lock block',
 		variants.every((v) => v.prompt_text.includes('STYLE LOCK — PRESERVE VERBATIM'))
+	);
+	check(
+		'every variant includes teaching explanation',
+		variants.every((v) => v.prompt_text.includes('Slide explanation:'))
 	);
 
 	console.log('\n--- sample gpt-image prompt (slide 1) ---');

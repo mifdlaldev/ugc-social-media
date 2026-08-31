@@ -141,8 +141,33 @@
 						<Badge variant="default">{slide.slide_type}</Badge>
 						<h2 class="text-h2 text-foreground">{slide.slide_title}</h2>
 					</div>
+					{#if slide.slide_subtitle}
+						<p class="mt-2 text-sm text-text-secondary">{slide.slide_subtitle}</p>
+					{/if}
 				</Card.Header>
 				<Card.Content>
+					{#if slide.slide_explanation}
+						<div class="mb-4">
+							<h3 class="text-caption mb-1 text-text-muted">Penjelasan</h3>
+							<p class="text-sm text-text-primary">{slide.slide_explanation}</p>
+						</div>
+					{/if}
+
+					<div class="mb-4 grid gap-4 sm:grid-cols-2">
+						{#if slide.visual_labels}
+							<div>
+								<h3 class="text-caption mb-1 text-text-muted">Label Visual</h3>
+								<p class="font-mono text-xs text-text-secondary">{slide.visual_labels}</p>
+							</div>
+						{/if}
+						{#if slide.slide_takeaway}
+							<div>
+								<h3 class="text-caption mb-1 text-text-muted">Poin Kunci</h3>
+								<p class="text-sm text-text-secondary">{slide.slide_takeaway}</p>
+							</div>
+						{/if}
+					</div>
+
 					<div class="mb-4">
 						<h3 class="text-caption mb-1 text-text-muted">Research Context</h3>
 						<p class="text-sm text-text-secondary">{slide.research_context}</p>

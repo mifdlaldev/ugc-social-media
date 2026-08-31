@@ -320,6 +320,10 @@ export const postsApi = new Elysia({ prefix: '/api' })
 						slide_index: slide.slide_index,
 						slide_type: slide.slide_type,
 						slide_title: slide.slide_title,
+						slide_subtitle: slide.slide_subtitle || null,
+						slide_explanation: slide.slide_explanation,
+						visual_labels: slide.visual_labels || null,
+						slide_takeaway: slide.slide_takeaway || null,
 						research_context: slide.research_context
 					})
 					.returning();

@@ -18,6 +18,10 @@ export interface GeneratedSlide {
 	slide_index: number;
 	slide_type: SlideBrief['slide_type'];
 	slide_title: string;
+	slide_subtitle: string;
+	slide_explanation: string;
+	visual_labels: string;
+	slide_takeaway: string;
 	research_context: string;
 	variants: ProviderVariant[];
 }
@@ -44,13 +48,27 @@ function styleLockBlock(styleLock: string): string {
 	return `STYLE LOCK — PRESERVE VERBATIM ACROSS ALL SLIDES:\n${styleLock}`;
 }
 
+/**
+ * Teaching copy as separate labelled lines. An empty optional field is omitted
+ * rather than emitted as a blank label, which would waste prompt space and could
+ * read as a missing value to the model.
+ */
+function teachingBlock(ctx: SlideContext): string {
+	const lines = [`Slide title: ${ctx.slide_title}`];
+	if (ctx.slideSubtitle.trim()) lines.push(`Slide subtitle: ${ctx.slideSubtitle}`);
+	lines.push(`Slide explanation: ${ctx.slideExplanation}`);
+	if (ctx.visualLabels.trim()) lines.push(`Visual labels: ${ctx.visualLabels}`);
+	if (ctx.slideTakeaway.trim()) lines.push(`Slide takeaway: ${ctx.slideTakeaway}`);
+	return lines.join('\n');
+}
+
 const PROVIDER_TEMPLATES: Record<Provider, (ctx: SlideContext) => string> = {
 	'gpt-image': (
 		ctx
 	) => `${ctx.visualCommand} Create an image for ${ctx.placementLabel} (slide ${ctx.slide_index + 1} of ${ctx.slideCount}).
 Topic: ${ctx.topic}
 Slide type: ${ctx.slide_type}
-Slide title: ${ctx.slide_title}
+${teachingBlock(ctx)}
 Visual form: ${ctx.visualCommand} — ${ctx.visualCommandDescription}
 On-image text: "${ctx.onImageText}"
 Visual direction: ${ctx.visualNotes}
@@ -62,6 +80,7 @@ Render text accurately in Indonesian language. High contrast. Sharp edges.`,
 
 	'nano-banana': (ctx) => `Create a photorealistic or stylized image for ${ctx.placementLabel}.
 Topic: ${ctx.topic}
+${teachingBlock(ctx)}
 Visual form: ${ctx.visualCommand} — ${ctx.visualCommandDescription}
 Visual focus: ${ctx.visualNotes}
 On-image text: "${ctx.onImageText}" (minimal text overlay)
@@ -73,6 +92,7 @@ High quality, professional photography or 3D render style. Cinematic lighting.`,
 
 	recraft: (ctx) => `Create a vector-style illustration for ${ctx.placementLabel}.
 Topic: ${ctx.topic}
+${teachingBlock(ctx)}
 Visual form: ${ctx.visualCommand} — ${ctx.visualCommandDescription}
 Style: consistent brand illustration, icon-based, flat design
 Elements: ${ctx.visualNotes}
@@ -84,24 +104,23 @@ ${EXCLUSIONS_RULE}
 Color palette: limited 3-4 colors, brand-aligned. Clean lines, modern flat illustration.`
 };
 
-const SYSTEM_PROMPT = `You generate per-provider visual notes and on-image text for social media carousel slides.
+const SYSTEM_PROMPT = `You generate composition direction and the primary rendered text for one educational carousel slide.
 
-You will receive a topic, target image placement, visual form, slide type, slide title, and research context.
+You will receive a topic, target image placement, visual form, slide type, and the slide's teaching copy.
 You must return a JSON object with exactly this shape:
 {
-  "visual_notes": string (max 200 chars, describes composition, colors, style, focal point),
-  "on_image_text": string (max 80 chars, the text rendered ON the image itself)
+  "visual_notes": string (max 220 chars, describes composition, layout, colors, focal point, and where labels sit),
+  "on_image_text": string (max 120 chars, the primary text rendered ON the image)
 }
 
 Rules:
-- visual_notes must follow the supplied visual form and be concrete and visual (composition, colors, style, focal element)
+- visual_notes must follow the supplied visual form and be concrete and visual
+- visual_notes must place labels next to the components they identify, not in a separate legend
 - visual_notes must not add engineering facts, numbers, materials, dimensions, standards, citations, or claims
-- on_image_text should be short, punchy, in Indonesian
-- on_image_text must be a key phrase, NOT a full sentence
-- For hook slide: on_image_text should be the hook from the supplied context
-- For cta slide: on_image_text should be the call to action from the supplied context
-- For data slide: on_image_text should be the key data point from the supplied context
-- Do not invent any factual content absent from the topic and research context
+- on_image_text must be Indonesian and must agree with the supplied slide title and explanation
+- on_image_text may be a short sentence when that reads more clearly than a fragment; keep it legible at small size
+- Preserve any qualifier from the supplied copy exactly; never turn an approximate figure into an exact one
+- Do not invent any factual content absent from the supplied topic, teaching copy, or research context
 - Return ONLY the JSON object, no markdown`;
 
 export interface SlideContext {
@@ -111,6 +130,10 @@ export interface SlideContext {
 	visualCommandDescription: string;
 	slide_type: string;
 	slide_title: string;
+	slideSubtitle: string;
+	slideExplanation: string;
+	visualLabels: string;
+	slideTakeaway: string;
 	research_context: string;
 	slide_index: number;
 	slideCount: number;
@@ -163,6 +186,10 @@ export async function generateSlides(
 			visualCommandDescription: command.description,
 			slide_type: brief.slide_type,
 			slide_title: brief.slide_title,
+			slideSubtitle: brief.slide_subtitle,
+			slideExplanation: brief.slide_explanation,
+			visualLabels: brief.visual_labels,
+			slideTakeaway: brief.slide_takeaway,
 			research_context: brief.research_context,
 			slide_index: brief.slide_index,
 			slideCount: synthesis.slides.length,
@@ -192,6 +219,10 @@ export async function generateSlides(
 			slide_index: brief.slide_index,
 			slide_type: brief.slide_type,
 			slide_title: brief.slide_title,
+			slide_subtitle: brief.slide_subtitle,
+			slide_explanation: brief.slide_explanation,
+			visual_labels: brief.visual_labels,
+			slide_takeaway: brief.slide_takeaway,
 			research_context: brief.research_context,
 			variants
 		});
@@ -208,7 +239,7 @@ Target placement: ${ctx.placementLabel}
 Target canvas: ${ctx.width}x${ctx.height} pixels, ${ctx.aspectRatio}
 Visual form: ${ctx.visualCommand} — ${ctx.visualCommandDescription}
 Slide type: ${ctx.slide_type}
-Slide title: ${ctx.slide_title}
+${teachingBlock(ctx)}
 Research context: ${ctx.research_context}
 Slide position: ${ctx.slide_index + 1} of ${ctx.slideCount}
 

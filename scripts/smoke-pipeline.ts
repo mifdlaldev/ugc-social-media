@@ -236,6 +236,34 @@ try {
 		'every variant includes teaching explanation',
 		variants.every((v) => v.prompt_text.includes('Slide explanation:'))
 	);
+	check(
+		'every variant carries the render section',
+		variants.every((v) => v.prompt_text.includes('RENDER IN ARTWORK — EXACT TEXT ONLY:'))
+	);
+	check(
+		'every variant carries the composition-context section',
+		variants.every((v) =>
+			v.prompt_text.includes('CONTEXT FOR COMPOSITION ONLY — DO NOT RENDER AS BODY COPY:')
+		)
+	);
+	check(
+		'every variant excludes rendered body copy',
+		variants.every((v) => v.prompt_text.includes('No paragraph or block of body copy'))
+	);
+	const boundaryHeld = variants.filter((v) => {
+		const renderStart = v.prompt_text.indexOf('RENDER IN ARTWORK — EXACT TEXT ONLY:');
+		const contextStart = v.prompt_text.indexOf(
+			'CONTEXT FOR COMPOSITION ONLY — DO NOT RENDER AS BODY COPY:'
+		);
+		if (renderStart < 0 || contextStart <= renderStart) return false;
+		const renderPart = v.prompt_text.slice(renderStart, contextStart);
+		return !renderPart.includes('Slide explanation:');
+	});
+	check(
+		'no explanation sits inside the render section',
+		boundaryHeld.length === variants.length,
+		`${boundaryHeld.length}/${variants.length}`
+	);
 
 	console.log('\n--- sample gpt-image prompt (slide 1) ---');
 	console.log(

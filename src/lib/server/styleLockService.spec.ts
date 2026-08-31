@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	STYLE_LOCK_MAX_LENGTH,
 	STYLE_LOCK_MIN_LENGTH,
+	STYLE_LOCK_SYSTEM_PROMPT,
 	assertAestheticOnly,
 	findFactualTerms,
 	parseStyleLockResponse,
@@ -135,5 +136,54 @@ describe('validateStyleLockText', () => {
 		// The owner's wording is authoritative. Only bounds are enforced here.
 		const withNumber = `${AESTHETIC_ONLY}\nNOTE: keep the 150 mm detail legible.`;
 		expect(() => validateStyleLockText(withNumber)).not.toThrow();
+	});
+});
+
+describe('visual impact brief', () => {
+	it('asks for a focal point, a contrast accent, and display typography', () => {
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('FOCAL POINT:');
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('CONTRAST:');
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('high-contrast accent');
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('bold display treatment for headings');
+	});
+
+	it('rejects a low-contrast washed-out scheme', () => {
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('low-contrast');
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('washed-out');
+	});
+
+	it('keeps the palette to one accent', () => {
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('Use exactly one accent');
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('Do not expand the palette');
+	});
+
+	it('requires one dominant focal element and generous safe space', () => {
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('one dominant focal element');
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('generous safe space');
+	});
+
+	it('forbids clutter and interface ornament', () => {
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('No decorative clutter');
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('no interface elements');
+	});
+
+	it('keeps the aesthetic-only rule intact alongside the impact rules', () => {
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('Aesthetic properties ONLY');
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('named standard');
+	});
+
+	it('accepts a high-contrast specification that carries no facts', () => {
+		const highContrast = [
+			'MEDIUM: flat vector editorial illustration.',
+			'PALETTE: deep slate base, off-white, one signal orange accent.',
+			'TYPOGRAPHY: bold condensed uppercase headings, light sans labels.',
+			'FOCAL POINT: one large sectioned element, upper third.',
+			'SHAPE LANGUAGE: even strokes, square corners, solid icons.',
+			'BACKGROUND: deep slate, generous negative space.',
+			'CONTRAST: accent reads instantly against the slate base.',
+			'CONSISTENCY: identical palette, stroke weight, and type scale on every slide.'
+		].join('\n');
+		expect(findFactualTerms(highContrast)).toEqual([]);
+		expect(() => assertAestheticOnly(highContrast)).not.toThrow();
 	});
 });

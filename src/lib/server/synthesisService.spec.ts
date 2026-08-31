@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseSynthesisResponse } from './synthesisService';
+import { parseSynthesisResponse, SYNTHESIS_SYSTEM_PROMPT } from './synthesisService';
 
 /** One well-formed slide; helpers below vary single fields from this baseline. */
 function slide(overrides: Record<string, unknown> = {}) {
@@ -110,5 +110,71 @@ describe('parseSynthesisResponse teaching fields', () => {
 		expect(() => parseSynthesisResponse(JSON.stringify({ topic: 'x' }), 1)).toThrow(
 			'SYNTHESIS_INVALID_FORMAT'
 		);
+	});
+});
+
+describe('human practitioner voice instruction', () => {
+	it('asks for a practitioner voice rather than a report', () => {
+		expect(SYNTHESIS_SYSTEM_PROMPT).toContain('practitioner');
+		expect(SYNTHESIS_SYSTEM_PROMPT).toContain('not as a report');
+	});
+
+	it('sets kamu as the default address', () => {
+		expect(SYNTHESIS_SYSTEM_PROMPT).toContain('Address the reader as "kamu"');
+		expect(SYNTHESIS_SYSTEM_PROMPT).toContain('formal institutional register');
+	});
+
+	it('names the filler attribution the reviewed sample produced', () => {
+		expect(SYNTHESIS_SYSTEM_PROMPT).toContain('Sumber menjelaskan bahwa');
+		expect(SYNTHESIS_SYSTEM_PROMPT).toContain('Sumber menyarankan agar');
+		expect(SYNTHESIS_SYSTEM_PROMPT).toContain('para ahli sepakat');
+	});
+
+	it('names the remaining template patterns to avoid', () => {
+		expect(SYNTHESIS_SYSTEM_PROMPT).toContain('Anda akan mempelajari');
+		expect(SYNTHESIS_SYSTEM_PROMPT).toContain('bukan sekadar X, tetapi Y');
+		expect(SYNTHESIS_SYSTEM_PROMPT).toContain('Pelajari. Bandingkan. Putuskan');
+		expect(SYNTHESIS_SYSTEM_PROMPT).toContain('Making every slide_title a question');
+	});
+
+	it('asks for varied sentence length without mechanical alternation', () => {
+		expect(SYNTHESIS_SYSTEM_PROMPT).toContain('Vary sentence length');
+		expect(SYNTHESIS_SYSTEM_PROMPT).toContain('do not alternate mechanically');
+	});
+
+	it('requires natural Indonesian connectors', () => {
+		expect(SYNTHESIS_SYSTEM_PROMPT).toContain('padahal');
+		expect(SYNTHESIS_SYSTEM_PROMPT).toContain('soalnya');
+		expect(SYNTHESIS_SYSTEM_PROMPT).toContain('selain itu');
+	});
+
+	it('forbids literal translated-English phrasing', () => {
+		expect(SYNTHESIS_SYSTEM_PROMPT).toContain('di penghujung hari');
+		expect(SYNTHESIS_SYSTEM_PROMPT).toContain('mari kita breakdown');
+	});
+
+	it('forbids invented first-person experience', () => {
+		expect(SYNTHESIS_SYSTEM_PROMPT).toContain('Never claim first-person experience');
+		expect(SYNTHESIS_SYSTEM_PROMPT).toContain('clearly hypothetical');
+	});
+
+	it('keeps fact fidelity above voice', () => {
+		expect(SYNTHESIS_SYSTEM_PROMPT).toContain('Fact fidelity outranks voice');
+		expect(SYNTHESIS_SYSTEM_PROMPT).toContain('hampir 95%');
+	});
+
+	it('keeps the existing sensationalism ban', () => {
+		expect(SYNTHESIS_SYSTEM_PROMPT).toContain('sensationalism');
+		expect(SYNTHESIS_SYSTEM_PROMPT).toContain('pasti runtuh');
+	});
+
+	it('carries no detector-evasion instruction', () => {
+		const lowered = SYNTHESIS_SYSTEM_PROMPT.toLowerCase();
+		expect(lowered).not.toContain('detector');
+		expect(lowered).not.toContain('detection');
+		expect(lowered).not.toContain('undetectable');
+		expect(lowered).not.toContain('sound human');
+		expect(lowered).not.toContain('perplexity');
+		expect(lowered).not.toContain('burstiness');
 	});
 });

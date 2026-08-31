@@ -19,27 +19,37 @@ const FACTUAL_TERM_PATTERNS: RegExp[] = [
 	/\b\d+\s?(hari|minggu|bulan|tahun)\b/i
 ];
 
-const SYSTEM_PROMPT = `You are an art director. Produce ONE reusable style specification for a set of educational infographic slides.
+export const STYLE_LOCK_SYSTEM_PROMPT = `You are an art director. Produce ONE reusable style specification for a set of educational infographic slides.
 
 Return a JSON object with exactly this shape:
 {
   "style_lock": string
 }
 
-The style_lock string MUST describe only these six things, one short labelled line each:
+The style_lock string MUST describe only these eight things, one short labelled line each:
 - MEDIUM: the rendering treatment, stated concretely (for example flat vector editorial illustration, or isometric technical illustration)
-- PALETTE: a small fixed set of named colours plus one accent
-- TYPOGRAPHY: font character, weight contrast, and heading/label hierarchy
+- PALETTE: a small fixed set of named colours plus exactly ONE high-contrast accent
+- TYPOGRAPHY: a bold display treatment for headings, plus the weight and scale hierarchy down to labels
+- FOCAL POINT: the one dominant element or visual entry point each slide must have, and roughly where it sits
 - SHAPE LANGUAGE: line weight, corner treatment, icon style, texture
 - BACKGROUND: canvas treatment and how much negative space
+- CONTRAST: how the accent and the base separate, so the slide reads instantly at thumbnail size
 - CONSISTENCY: what must stay identical on every slide
+
+Visual impact rules:
+- The accent must contrast strongly against the base, not blend into it. Avoid an all-muted, low-contrast, washed-out scheme.
+- Headings must use a confident display weight with a clear size step down to body and label text.
+- Every slide must have one dominant focal element, not several competing ones.
+- Keep generous safe space so text is never crowded.
+- Use exactly one accent. Do not expand the palette with extra decorative colours.
+- No decorative clutter, no ornamental flourishes, no interface elements, no frames, no background patterns that fight the text.
 
 Hard rules:
 - Aesthetic properties ONLY. Never include a fact, measurement, unit, price, percentage, material property, named standard, code reference, citation, date, or duration.
 - Never mention the topic's subject matter as a claim. You may only choose aesthetics that suit it.
 - Never include slide-specific text, headlines, or captions.
 - Do not name a real brand, studio, or living artist.
-- Keep the whole string under 1200 characters.
+- Keep the whole string under 1600 characters.
 - Write labels in English; the specification is a production instruction, not audience-facing copy.
 - Return ONLY the JSON object, no markdown fence.`;
 
@@ -78,7 +88,7 @@ Produce the style specification. Output valid JSON only.`;
 
 	const content = await chatCompletion(
 		[
-			{ role: 'system', content: SYSTEM_PROMPT },
+			{ role: 'system', content: STYLE_LOCK_SYSTEM_PROMPT },
 			{ role: 'user', content: userMessage }
 		],
 		{ jsonMode: true, maxTokens: 900, temperature: 0.6 }

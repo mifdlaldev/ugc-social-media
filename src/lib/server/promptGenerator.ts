@@ -38,7 +38,7 @@ const EXACT_TEXT_RULE =
 	'EXACT TEXT: Render the quoted Indonesian text verbatim, with no translation, paraphrase, transliteration, or extra characters. Render it once and make it legible.';
 
 const EXCLUSIONS_RULE =
-	'EXCLUSIONS: No carousel dot indicators, page indicators, swipe arrows, application or browser interface, device frames, decorative borders or frames, watermarks, logos, signatures, QR codes, placeholder text, or additional text.';
+	'EXCLUSIONS: No carousel dot indicators, page indicators, swipe arrows, application or browser interface, device frames, decorative borders or frames, watermarks, logos, signatures, QR codes, placeholder text, or additional text. No paragraph or block of body copy, and no rendering of any line from the composition-context section.';
 
 /**
  * The style lock is inserted verbatim. Paraphrasing it would defeat its purpose:
@@ -49,11 +49,92 @@ function styleLockBlock(styleLock: string): string {
 }
 
 /**
- * Teaching copy as separate labelled lines. An empty optional field is omitted
- * rather than emitted as a blank label, which would waste prompt space and could
- * read as a missing value to the model.
+ * Section headings that split the prompt into text the artwork may show and text
+ * the model may only read.
+ *
+ * An earlier build passed the explanation into the prompt without a boundary and
+ * the model drew it as a paragraph, so the slide read as a document rather than an
+ * infographic. Labelling the sections is prompt direction, not a guarantee that a
+ * provider will comply.
  */
-function teachingBlock(ctx: SlideContext): string {
+export const RENDER_SECTION_HEADING = 'RENDER IN ARTWORK — EXACT TEXT ONLY:';
+export const CONTEXT_SECTION_HEADING = 'CONTEXT FOR COMPOSITION ONLY — DO NOT RENDER AS BODY COPY:';
+
+function renderBlock(ctx: SlideContext): string {
+	const lines = [RENDER_SECTION_HEADING, `Primary text: "${ctx.onImageText}"`];
+	if (ctx.visualLabels.trim()) {
+		lines.push(`Short labels placed beside the parts they identify: ${ctx.visualLabels}`);
+	}
+	lines.push('Render no other text.');
+	return lines.join('\n');
+}
+
+/**
+ * Teaching copy the model may read to understand the slide, but must not draw.
+ *
+ * An empty optional field is omitted rather than emitted as a blank label, which
+ * would waste prompt space and could read as a missing value to the model.
+ */
+function contextBlock(ctx: SlideContext): string {
+	const lines = [
+		CONTEXT_SECTION_HEADING,
+		`Topic: ${ctx.topic}`,
+		`Slide type: ${ctx.slide_type}`,
+		`Slide title: ${ctx.slide_title}`
+	];
+	if (ctx.slideSubtitle.trim()) lines.push(`Slide subtitle: ${ctx.slideSubtitle}`);
+	lines.push(`Slide explanation: ${ctx.slideExplanation}`);
+	if (ctx.slideTakeaway.trim()) lines.push(`Slide takeaway: ${ctx.slideTakeaway}`);
+	if (ctx.research_context.trim()) lines.push(`Research context: ${ctx.research_context}`);
+	lines.push(
+		'Use the lines above to decide the visual concept only. They inform composition; they are not copy to draw.'
+	);
+	return lines.join('\n');
+}
+
+const PROVIDER_TEMPLATES: Record<Provider, (ctx: SlideContext) => string> = {
+	'gpt-image': (
+		ctx
+	) => `${ctx.visualCommand} Create an image for ${ctx.placementLabel} (slide ${ctx.slide_index + 1} of ${ctx.slideCount}).
+Visual form: ${ctx.visualCommand} — ${ctx.visualCommandDescription}
+${renderBlock(ctx)}
+Visual direction: ${ctx.visualNotes}
+Target canvas: ${ctx.width}x${ctx.height} pixels, ${ctx.aspectRatio} aspect ratio
+${styleLockBlock(ctx.styleLock)}
+${contextBlock(ctx)}
+${EXACT_TEXT_RULE}
+${EXCLUSIONS_RULE}
+Render text accurately in Indonesian language. High contrast. Sharp edges.`,
+
+	'nano-banana': (ctx) => `Create a photorealistic or stylized image for ${ctx.placementLabel}.
+Visual form: ${ctx.visualCommand} — ${ctx.visualCommandDescription}
+${renderBlock(ctx)}
+Visual focus: ${ctx.visualNotes}
+Target canvas: ${ctx.width}x${ctx.height} pixels, ${ctx.aspectRatio} aspect ratio
+${styleLockBlock(ctx.styleLock)}
+${contextBlock(ctx)}
+${EXACT_TEXT_RULE}
+${EXCLUSIONS_RULE}
+High quality, professional photography or 3D render style. Cinematic lighting.`,
+
+	recraft: (ctx) => `Create a vector-style illustration for ${ctx.placementLabel}.
+Visual form: ${ctx.visualCommand} — ${ctx.visualCommandDescription}
+Style: consistent brand illustration, icon-based, flat design
+${renderBlock(ctx)}
+Elements: ${ctx.visualNotes}
+Target canvas: ${ctx.width}x${ctx.height} pixels, ${ctx.aspectRatio} aspect ratio
+${styleLockBlock(ctx.styleLock)}
+${contextBlock(ctx)}
+${EXACT_TEXT_RULE}
+${EXCLUSIONS_RULE}
+Color palette: limited 3-4 colors, brand-aligned. Clean lines, modern flat illustration.`
+};
+
+/**
+ * Teaching copy for the visual-note stage, which is a text-model call rather than
+ * an image prompt, so it carries no render boundary.
+ */
+function teachingLines(ctx: SlideContext): string {
 	const lines = [`Slide title: ${ctx.slide_title}`];
 	if (ctx.slideSubtitle.trim()) lines.push(`Slide subtitle: ${ctx.slideSubtitle}`);
 	lines.push(`Slide explanation: ${ctx.slideExplanation}`);
@@ -62,49 +143,7 @@ function teachingBlock(ctx: SlideContext): string {
 	return lines.join('\n');
 }
 
-const PROVIDER_TEMPLATES: Record<Provider, (ctx: SlideContext) => string> = {
-	'gpt-image': (
-		ctx
-	) => `${ctx.visualCommand} Create an image for ${ctx.placementLabel} (slide ${ctx.slide_index + 1} of ${ctx.slideCount}).
-Topic: ${ctx.topic}
-Slide type: ${ctx.slide_type}
-${teachingBlock(ctx)}
-Visual form: ${ctx.visualCommand} — ${ctx.visualCommandDescription}
-On-image text: "${ctx.onImageText}"
-Visual direction: ${ctx.visualNotes}
-Target canvas: ${ctx.width}x${ctx.height} pixels, ${ctx.aspectRatio} aspect ratio
-${styleLockBlock(ctx.styleLock)}
-${EXACT_TEXT_RULE}
-${EXCLUSIONS_RULE}
-Render text accurately in Indonesian language. High contrast. Sharp edges.`,
-
-	'nano-banana': (ctx) => `Create a photorealistic or stylized image for ${ctx.placementLabel}.
-Topic: ${ctx.topic}
-${teachingBlock(ctx)}
-Visual form: ${ctx.visualCommand} — ${ctx.visualCommandDescription}
-Visual focus: ${ctx.visualNotes}
-On-image text: "${ctx.onImageText}" (minimal text overlay)
-Target canvas: ${ctx.width}x${ctx.height} pixels, ${ctx.aspectRatio} aspect ratio
-${styleLockBlock(ctx.styleLock)}
-${EXACT_TEXT_RULE}
-${EXCLUSIONS_RULE}
-High quality, professional photography or 3D render style. Cinematic lighting.`,
-
-	recraft: (ctx) => `Create a vector-style illustration for ${ctx.placementLabel}.
-Topic: ${ctx.topic}
-${teachingBlock(ctx)}
-Visual form: ${ctx.visualCommand} — ${ctx.visualCommandDescription}
-Style: consistent brand illustration, icon-based, flat design
-Elements: ${ctx.visualNotes}
-Text overlay: "${ctx.onImageText}" in modern sans-serif
-Target canvas: ${ctx.width}x${ctx.height} pixels, ${ctx.aspectRatio} aspect ratio
-${styleLockBlock(ctx.styleLock)}
-${EXACT_TEXT_RULE}
-${EXCLUSIONS_RULE}
-Color palette: limited 3-4 colors, brand-aligned. Clean lines, modern flat illustration.`
-};
-
-const SYSTEM_PROMPT = `You generate composition direction and the primary rendered text for one educational carousel slide.
+export const VISUAL_NOTES_SYSTEM_PROMPT = `You generate composition direction and the primary rendered text for one educational carousel slide.
 
 You will receive a topic, target image placement, visual form, slide type, and the slide's teaching copy.
 You must return a JSON object with exactly this shape:
@@ -115,12 +154,18 @@ You must return a JSON object with exactly this shape:
 
 Rules:
 - visual_notes must follow the supplied visual form and be concrete and visual
+- visual_notes must name one dominant focal point and state where it sits
 - visual_notes must place labels next to the components they identify, not in a separate legend
 - visual_notes must not add engineering facts, numbers, materials, dimensions, standards, citations, or claims
+- on_image_text is the ONLY primary text that will be drawn on the image, so it must stand on its own
 - on_image_text must be Indonesian and must agree with the supplied slide title and explanation
-- on_image_text may be a short sentence when that reads more clearly than a fragment; keep it legible at small size
+- on_image_text must stay short enough to render legibly at small size; never copy the whole explanation into it
+- on_image_text may be a short sentence when that reads more clearly than a fragment
+- Write on_image_text in natural Indonesian creator voice; address the viewer as "kamu" when it addresses the viewer
+- Avoid report-like attribution, textbook framing, repeated question-shaped hooks, and staccato three-item slogans
 - Preserve any qualifier from the supplied copy exactly; never turn an approximate figure into an exact one
 - Do not invent any factual content absent from the supplied topic, teaching copy, or research context
+- Do not claim first-person experience, a site visit, a project, or a personal observation not supplied by the owner
 - Return ONLY the JSON object, no markdown`;
 
 export interface SlideContext {
@@ -239,7 +284,7 @@ Target placement: ${ctx.placementLabel}
 Target canvas: ${ctx.width}x${ctx.height} pixels, ${ctx.aspectRatio}
 Visual form: ${ctx.visualCommand} — ${ctx.visualCommandDescription}
 Slide type: ${ctx.slide_type}
-${teachingBlock(ctx)}
+${teachingLines(ctx)}
 Research context: ${ctx.research_context}
 Slide position: ${ctx.slide_index + 1} of ${ctx.slideCount}
 
@@ -247,7 +292,7 @@ Generate visual notes and on-image text for this slide. Return JSON only.`;
 
 	const content = await chatCompletion(
 		[
-			{ role: 'system', content: SYSTEM_PROMPT },
+			{ role: 'system', content: VISUAL_NOTES_SYSTEM_PROMPT },
 			{ role: 'user', content: userMessage }
 		],
 		{ jsonMode: true, maxTokens: 500, temperature: 0.7 }

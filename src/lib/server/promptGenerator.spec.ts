@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { findPlatformPlacement } from '$lib/catalog/platformPlacements';
 import { findVisualCommand } from '$lib/catalog/visualCommands';
 import {
+	CONTEXT_SECTION_HEADING,
+	RENDER_SECTION_HEADING,
+	VISUAL_NOTES_SYSTEM_PROMPT,
 	buildProviderPrompt,
 	type AspectRatio,
 	type Provider,
@@ -143,35 +146,85 @@ describe('shared prompt rules', () => {
 	});
 });
 
-describe('teaching block', () => {
+describe('render boundary', () => {
 	const ctx = contextFor('instagram-feed-portrait', '/comparison');
 
-	it('emits labelled teaching lines on every provider', () => {
+	it('carries both labelled sections on every provider', () => {
 		for (const provider of PROVIDERS) {
 			const prompt = buildProviderPrompt(provider, ctx);
-			expect(prompt, provider).toContain('Slide title: Bata Merah vs Bata Ringan');
-			expect(prompt, provider).toContain('Slide subtitle: Perbandingan untuk dinding');
-			expect(prompt, provider).toContain('Slide explanation: Bata merah dibakar');
-			expect(prompt, provider).toContain('Visual labels: bata merah | bata ringan');
-			expect(prompt, provider).toContain('Slide takeaway: Pilih material');
+			expect(prompt, provider).toContain(RENDER_SECTION_HEADING);
+			expect(prompt, provider).toContain(CONTEXT_SECTION_HEADING);
 		}
 	});
 
-	it('omits optional lines when their fields are empty', () => {
-		const sparse = { ...ctx, slideSubtitle: '', visualLabels: '', slideTakeaway: '' };
-		const prompt = buildProviderPrompt('gpt-image', sparse);
-		expect(prompt).not.toContain('Slide subtitle:');
-		expect(prompt).not.toContain('Visual labels:');
-		expect(prompt).not.toContain('Slide takeaway:');
-		// The two required lines survive.
-		expect(prompt).toContain('Slide title:');
-		expect(prompt).toContain('Slide explanation:');
+	it('names the exact primary text inside the render section', () => {
+		for (const provider of PROVIDERS) {
+			const prompt = buildProviderPrompt(provider, ctx);
+			const renderPart = prompt.slice(
+				prompt.indexOf(RENDER_SECTION_HEADING),
+				prompt.indexOf(CONTEXT_SECTION_HEADING)
+			);
+			expect(renderPart, provider).toContain('Primary text: "Mana Jawaranya?"');
+			expect(renderPart, provider).toContain('Render no other text.');
+		}
 	});
 
-	it('keeps the explanation distinct from the rendered on-image text', () => {
-		const prompt = buildProviderPrompt('gpt-image', ctx);
+	it('keeps the explanation inside the context section, never the render section', () => {
+		for (const provider of PROVIDERS) {
+			const prompt = buildProviderPrompt(provider, ctx);
+			const renderPart = prompt.slice(
+				prompt.indexOf(RENDER_SECTION_HEADING),
+				prompt.indexOf(CONTEXT_SECTION_HEADING)
+			);
+			const contextPart = prompt.slice(prompt.indexOf(CONTEXT_SECTION_HEADING));
+			expect(renderPart, provider).not.toContain('Bata merah dibakar');
+			expect(contextPart, provider).toContain('Slide explanation: Bata merah dibakar');
+		}
+	});
+
+	it('places the teaching fields in the context section', () => {
+		for (const provider of PROVIDERS) {
+			const contextPart = buildProviderPrompt(provider, ctx).slice(
+				buildProviderPrompt(provider, ctx).indexOf(CONTEXT_SECTION_HEADING)
+			);
+			expect(contextPart, provider).toContain('Slide title: Bata Merah vs Bata Ringan');
+			expect(contextPart, provider).toContain('Slide subtitle: Perbandingan untuk dinding');
+			expect(contextPart, provider).toContain('Slide takeaway: Pilih material');
+			expect(contextPart, provider).toContain('Research context: context from approved research');
+		}
+	});
+
+	it('states that context lines are not copy to draw', () => {
+		for (const provider of PROVIDERS) {
+			expect(buildProviderPrompt(provider, ctx), provider).toContain('not copy to draw');
+		}
+	});
+
+	it('excludes rendered body copy', () => {
+		for (const provider of PROVIDERS) {
+			const prompt = buildProviderPrompt(provider, ctx);
+			expect(prompt, provider).toContain('No paragraph or block of body copy');
+			expect(prompt, provider).toContain('no rendering of any line from the composition-context');
+		}
+	});
+
+	it('renders labels only when the slide supplies them', () => {
+		const withLabels = buildProviderPrompt('gpt-image', ctx);
+		expect(withLabels).toContain('Short labels placed beside the parts they identify:');
+
+		const sparse = { ...ctx, visualLabels: '' };
+		expect(buildProviderPrompt('gpt-image', sparse)).not.toContain('Short labels placed beside');
+	});
+
+	it('omits optional context lines when their fields are empty', () => {
+		const sparse = { ...ctx, slideSubtitle: '', slideTakeaway: '', research_context: '' };
+		const prompt = buildProviderPrompt('gpt-image', sparse);
+		expect(prompt).not.toContain('Slide subtitle:');
+		expect(prompt).not.toContain('Slide takeaway:');
+		expect(prompt).not.toContain('Research context:');
+		// The lines that must always survive.
+		expect(prompt).toContain('Slide title:');
 		expect(prompt).toContain('Slide explanation:');
-		expect(prompt).toContain('On-image text: "Mana Jawaranya?"');
 	});
 });
 
@@ -187,5 +240,37 @@ describe('canvas resolution per placement', () => {
 		const x = buildProviderPrompt('gpt-image', contextFor('x-instream-single-image', '/timeline'));
 		expect(x).toContain('1200x675 pixels');
 		expect(x).toContain('16:9 aspect ratio');
+	});
+});
+
+describe('visual-note instruction', () => {
+	it('states that on-image text is the only text drawn', () => {
+		expect(VISUAL_NOTES_SYSTEM_PROMPT).toContain('the ONLY primary text that will be drawn');
+	});
+
+	it('keeps on-image text legible and short', () => {
+		expect(VISUAL_NOTES_SYSTEM_PROMPT).toContain('short enough to render legibly');
+		expect(VISUAL_NOTES_SYSTEM_PROMPT).toContain('never copy the whole explanation into it');
+	});
+
+	it('requires one dominant focal point in the notes', () => {
+		expect(VISUAL_NOTES_SYSTEM_PROMPT).toContain('one dominant focal point');
+	});
+
+	it('carries the voice and honesty rules', () => {
+		expect(VISUAL_NOTES_SYSTEM_PROMPT).toContain('natural Indonesian creator voice');
+		expect(VISUAL_NOTES_SYSTEM_PROMPT).toContain('Do not claim first-person experience');
+	});
+
+	it('keeps qualifier preservation and the no-invention rule', () => {
+		expect(VISUAL_NOTES_SYSTEM_PROMPT).toContain('Preserve any qualifier');
+		expect(VISUAL_NOTES_SYSTEM_PROMPT).toContain('Do not invent any factual content');
+	});
+
+	it('carries no detector-evasion instruction', () => {
+		const lowered = VISUAL_NOTES_SYSTEM_PROMPT.toLowerCase();
+		expect(lowered).not.toContain('detector');
+		expect(lowered).not.toContain('detection');
+		expect(lowered).not.toContain('undetectable');
 	});
 });

@@ -92,12 +92,13 @@ async function requestCompletion(
 	}
 ): Promise<string> {
 	const requested = options.maxTokens ?? DEFAULT_MAX_TOKENS;
-	const body: ChatCompletionRequest = {
+	const body: ChatCompletionRequest & { stream: false } = {
 		model: config.llmModel,
 		messages,
 		temperature: options.temperature ?? 0.7,
 		max_tokens: requested + REASONING_HEADROOM_TOKENS,
-		reasoning_effort: options.reasoningEffort ?? DEFAULT_REASONING_EFFORT
+		reasoning_effort: options.reasoningEffort ?? DEFAULT_REASONING_EFFORT,
+		stream: false
 	};
 	if (options.jsonMode) {
 		body.response_format = { type: 'json_object' };

@@ -4,6 +4,7 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { goto } from '$app/navigation';
 	import { findPlatformPlacement } from '$lib/catalog/platformPlacements';
+	import LoadingIndicator from '$lib/components/LoadingIndicator.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -102,6 +103,14 @@
 					<Button onclick={runGenerate} disabled={generating} size="lg">
 						{generating ? 'Generating...' : 'Generate Prompt'}
 					</Button>
+					{#if generating}
+						<div class="mx-auto mt-4 max-w-md text-left">
+							<LoadingIndicator
+								label="Sedang membuat prompt tiap slide"
+								hint="{post.slide_count} slide"
+							/>
+						</div>
+					{/if}
 				{/if}
 			</Card.Content>
 		</Card.Root>
@@ -132,6 +141,17 @@
 				{generating ? 'Generating...' : 'Generate Ulang'}
 			</Button>
 		</div>
+
+		{#if generating}
+			<Card.Root class="mb-6">
+				<Card.Content class="py-4">
+					<LoadingIndicator
+						label="Sedang membuat ulang prompt tiap slide"
+						hint="{post.slide_count} slide"
+					/>
+				</Card.Content>
+			</Card.Root>
+		{/if}
 
 		{@const slide = slides[currentSlide]}
 		{#if slide}

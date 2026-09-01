@@ -3,6 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Textarea } from '$lib/components/ui/textarea';
 	import { Alert, AlertDescription, AlertTitle } from '$lib/components/ui/alert';
+	import LoadingIndicator from '$lib/components/LoadingIndicator.svelte';
 
 	let {
 		postId,
@@ -137,6 +138,12 @@
 					</Button>
 				{/if}
 			</div>
+			{#if generating}
+				<LoadingIndicator
+					label="Sedang membuat style lock"
+					hint="Menganalisis tema untuk spek visual"
+				/>
+			{/if}
 		{/if}
 	</Card.Content>
 </Card.Root>

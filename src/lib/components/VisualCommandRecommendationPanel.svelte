@@ -4,6 +4,7 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { Alert, AlertDescription, AlertTitle } from '$lib/components/ui/alert';
 	import { findVisualCommand } from '$lib/catalog/visualCommands';
+	import LoadingIndicator from '$lib/components/LoadingIndicator.svelte';
 
 	interface Suggestion {
 		command: string;
@@ -227,6 +228,9 @@
 					{loading ? 'Menganalisis...' : hasRecommendation ? 'Minta Ulang' : 'Minta Rekomendasi'}
 				</Button>
 			</div>
+			{#if loading}
+				<LoadingIndicator label="Sedang menganalisis bentuk visual" hint="AI" />
+			{/if}
 		{/if}
 	</Card.Content>
 </Card.Root>

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, mock } from 'bun:test';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { setPlatformEnv } from './config';
 import { compileResearch, searchYouCom } from './researchService';
 
@@ -10,7 +10,7 @@ describe('searchYouCom', () => {
 	});
 
 	it('returns parsed search results', async () => {
-		globalThis.fetch = mock(async () => {
+		globalThis.fetch = vi.fn(async () => {
 			return new Response(
 				JSON.stringify({
 					results: {
@@ -49,7 +49,7 @@ describe('searchYouCom', () => {
 	});
 
 	it('throws on non-OK response', async () => {
-		globalThis.fetch = mock(
+		globalThis.fetch = vi.fn(
 			async () => new Response('error', { status: 500 })
 		) as unknown as typeof fetch;
 		await expect(searchYouCom('test')).rejects.toThrow('YOU_SEARCH_FAILED_500');
@@ -65,7 +65,7 @@ describe('compileResearch', () => {
 	});
 
 	it('returns brief with numbered sources', async () => {
-		globalThis.fetch = mock(async () => {
+		globalThis.fetch = vi.fn(async () => {
 			return new Response(
 				JSON.stringify({
 					results: {
@@ -99,7 +99,7 @@ describe('compileResearch', () => {
 	});
 
 	it('throws RESEARCH_EMPTY when no results', async () => {
-		globalThis.fetch = mock(
+		globalThis.fetch = vi.fn(
 			async () =>
 				new Response(JSON.stringify({ results: { web: [] } }), {
 					status: 200,

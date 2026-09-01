@@ -7,6 +7,7 @@
 	import { findPlatformPlacement } from '$lib/catalog/platformPlacements';
 	import StyleLockPanel from '$lib/components/StyleLockPanel.svelte';
 	import VisualCommandRecommendationPanel from '$lib/components/VisualCommandRecommendationPanel.svelte';
+	import LoadingIndicator from '$lib/components/LoadingIndicator.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -110,15 +111,20 @@
 				AI akan mencari data real-time via You.com. Tinjau hasil sebelum generate prompt.
 			</Card.Description>
 		</Card.Header>
-		<Card.Content class="flex items-center justify-between gap-4">
-			<p class="text-sm text-text-secondary">
-				{sources.length === 0
-					? 'Belum ada riset. Klik tombol untuk mulai.'
-					: `${sources.length} sumber tersimpan.`}
-			</p>
-			<Button onclick={runResearch} disabled={researching}>
-				{researching ? 'Mencari...' : sources.length === 0 ? 'Riset Sekarang' : 'Riset Ulang'}
-			</Button>
+		<Card.Content>
+			<div class="flex items-center justify-between gap-4">
+				<p class="text-sm text-text-secondary">
+					{sources.length === 0
+						? 'Belum ada riset. Klik tombol untuk mulai.'
+						: `${sources.length} sumber tersimpan.`}
+				</p>
+				<Button onclick={runResearch} disabled={researching}>
+					{researching ? 'Mencari...' : sources.length === 0 ? 'Riset Sekarang' : 'Riset Ulang'}
+				</Button>
+			</div>
+			{#if researching}
+				<LoadingIndicator label="Sedang mencari sumber riset" hint="You.com" />
+			{/if}
 		</Card.Content>
 	</Card.Root>
 

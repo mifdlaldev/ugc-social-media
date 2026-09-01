@@ -4,15 +4,20 @@
 	let { label, hint }: { label: string; hint?: string } = $props();
 </script>
 
-<div class="mt-3 flex items-start gap-3" role="status" aria-live="polite" aria-busy="true">
+<div
+	class="mt-3 flex flex-col items-center gap-2 text-center"
+	role="status"
+	aria-live="polite"
+	aria-busy="true"
+>
 	<div class="relative flex h-5 w-5 shrink-0 items-center justify-center">
 		<div
 			class="pointer-events-none absolute h-full w-full animate-spin rounded-full border-2 border-border border-t-accent motion-reduce:animate-none"
 		></div>
 	</div>
 
-	<div class="min-w-0 flex-1">
-		<div class="flex flex-wrap items-center gap-2">
+	<div class="w-full max-w-sm">
+		<div class="flex flex-wrap items-center justify-center gap-2">
 			<span class="text-sm font-medium text-foreground">{label}</span>
 			{#if hint}
 				<Badge variant="outline" class="text-xs">{hint}</Badge>

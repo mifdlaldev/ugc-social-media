@@ -177,15 +177,16 @@ The prompt-generation service (`src/lib/server/promptGenerator.ts`) is the heart
 
 ## Environment Variables
 
-| Var                   | Required  | Description                                                 |
-| --------------------- | --------- | ----------------------------------------------------------- |
-| `DATABASE_URL`        | local dev | local SQLite path (e.g. `file:./data/local.db`)             |
-| `LLM_BASE_URL`        | yes       | OpenAI-compatible base URL, no trailing `/chat/completions` |
-| `LLM_API_KEY`         | yes       | gateway key (production: Cloudflare secret)                 |
-| `LLM_MODEL`           | yes       | text model id; required, never defaulted or guessed         |
-| `SESSION_SECRET`      | yes       | signs owner session cookies                                 |
-| `ADMIN_PASSWORD_HASH` | yes       | owner login password hash (MVP single-creator)              |
-| `ALLOWED_ORIGINS`     | dev       | CORS allowlist (dev only; same-origin in prod)              |
+| Var                     | Required  | Description                                                  |
+| ----------------------- | --------- | ------------------------------------------------------------ |
+| `DATABASE_URL`          | local dev | local SQLite path (e.g. `file:./data/local.db`)              |
+| `LLM_BASE_URL`          | yes       | OpenAI-compatible base URL, no trailing `/chat/completions`  |
+| `LLM_API_KEY`           | yes       | gateway key (production: Cloudflare secret)                  |
+| `LLM_MODEL`             | yes       | text model id; required, never defaulted or guessed          |
+| `SESSION_SECRET`        | yes       | signs owner session cookies                                  |
+| `ADMIN_PASSWORD_HASH`   | yes       | owner login password hash (MVP single-creator)               |
+| `RESEARCH_RESULT_COUNT` | yes       | positive integer; number of You.com results per research run |
+| `ALLOWED_ORIGINS`       | dev       | CORS allowlist (dev only; same-origin in prod)               |
 
 Never put real values in committed files. Use `.dev.vars` locally (wrangler) or `.env` + `.env.example` documenting keys only.
 

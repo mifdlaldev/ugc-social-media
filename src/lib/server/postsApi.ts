@@ -171,23 +171,53 @@ export const postsApi = new Elysia({ prefix: '/api' })
 			set.status = 404;
 			return { success: false, error: 'Post not found' };
 		}
+		let existingRows: {
+			source_url: string;
+			source_title: string | null;
+			source_snippet: string | null;
+		}[] = [];
 		try {
-			const research = await compileResearch(post.topic);
+			existingRows = await db
+				.select({
+					source_url: post_research_sources.source_url,
+					source_title: post_research_sources.source_title,
+					source_snippet: post_research_sources.source_snippet
+				})
+				.from(post_research_sources)
+				.where(eq(post_research_sources.post_id, post.id));
+			const excludeUrls = new Set(existingRows.map((r) => r.source_url.trim().toLowerCase()));
+			const research = await compileResearch(post.topic, { excludeUrls });
+			const newCount = research.sources.length;
+			const seen = new Set(existingRows.map((r) => r.source_url.trim().toLowerCase()));
+			const merged = [
+				...existingRows,
+				...research.sources
+					.filter((s) => !seen.has(s.url.trim().toLowerCase()))
+					.map((s) => ({
+						source_url: s.url,
+						source_title: s.title,
+						source_snippet: s.snippet
+					}))
+			];
 			await db.delete(post_research_sources).where(eq(post_research_sources.post_id, post.id));
-			for (const source of research.sources) {
+			for (const source of merged) {
 				await db.insert(post_research_sources).values({
 					post_id: post.id,
-					source_url: source.url,
-					source_title: source.title,
-					source_snippet: source.snippet,
+					source_url: source.source_url,
+					source_title: source.source_title,
+					source_snippet: source.source_snippet,
 					source_engine: 'you.com',
 					relevance_score: null
 				});
 			}
 			set.status = 200;
-			return { success: true, count: research.sources.length };
+			return { success: true, count: newCount };
 		} catch (err) {
 			const message = err instanceof Error ? err.message : 'Unknown error';
+			if (message === 'RESEARCH_EMPTY' && existingRows.length > 0) {
+				set.status = 200;
+				return { success: true, count: 0 };
+			}
 			set.status = 500;
 			return { success: false, error: message };
 		}

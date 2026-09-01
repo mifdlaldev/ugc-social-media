@@ -6,6 +6,7 @@ type AppEnv = {
 	LLM_BASE_URL?: string;
 	LLM_API_KEY?: string;
 	LLM_MODEL?: string;
+	RESEARCH_RESULT_COUNT?: string;
 	SESSION_SECRET?: string;
 	ADMIN_PASSWORD_HASH?: string;
 	YOU_API_KEY?: string;
@@ -49,6 +50,14 @@ export const config = {
 		const v = value('LLM_MODEL');
 		if (!v) throw new Error('LLM_MODEL is not configured');
 		return v;
+	},
+	get researchResultCount(): number {
+		const v = value('RESEARCH_RESULT_COUNT');
+		if (!v) throw new Error('RESEARCH_RESULT_COUNT is not configured');
+		const n = Number(v);
+		if (!Number.isInteger(n) || n <= 0)
+			throw new Error('RESEARCH_RESULT_COUNT must be a positive integer');
+		return n;
 	},
 	get youApiKey(): string {
 		const v = value('YOU_API_KEY');

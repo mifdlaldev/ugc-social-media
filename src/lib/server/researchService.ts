@@ -21,7 +21,11 @@ export interface ResearchBrief {
 
 const YOU_SEARCH_URL = 'https://ydc-index.io/v1/search';
 
-export async function searchYouCom(query: string, limit = 10): Promise<SearchResult[]> {
+export async function searchYouCom(
+	query: string,
+	limit = config.researchResultCount,
+	excludeUrls: ReadonlySet<string> = new Set()
+): Promise<SearchResult[]> {
 	const apiKey = config.youApiKey;
 	const url = new URL(YOU_SEARCH_URL);
 	url.searchParams.set('query', query);
@@ -45,15 +49,30 @@ export async function searchYouCom(query: string, limit = 10): Promise<SearchRes
 	};
 
 	const webResults = data.results?.web ?? [];
-	return webResults.slice(0, limit).map((r) => ({
-		title: r.title,
-		url: r.url,
-		snippet: r.snippets?.[0] ?? r.description ?? ''
-	}));
+	const seen = new Set<string>();
+	const results: SearchResult[] = [];
+	for (const r of webResults.slice(0, limit)) {
+		const url = (r.url ?? '').trim().toLowerCase();
+		if (!url) continue;
+		const snippet = r.snippets?.[0] ?? r.description ?? '';
+		if (!snippet.trim()) continue;
+		if (excludeUrls.has(url)) continue;
+		if (seen.has(url)) continue;
+		seen.add(url);
+		results.push({ title: r.title, url: r.url, snippet });
+	}
+	return results;
 }
 
-export async function compileResearch(topic: string): Promise<ResearchBrief> {
-	const sources = await searchYouCom(topic, 10);
+export async function compileResearch(
+	topic: string,
+	options: { excludeUrls?: ReadonlySet<string> } = {}
+): Promise<ResearchBrief> {
+	const sources = await searchYouCom(
+		topic,
+		config.researchResultCount,
+		options.excludeUrls ?? new Set()
+	);
 	if (sources.length === 0) {
 		throw new Error('RESEARCH_EMPTY');
 	}

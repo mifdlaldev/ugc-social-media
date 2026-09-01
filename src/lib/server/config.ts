@@ -38,7 +38,7 @@ export const config = {
 		return v;
 	},
 	get llmBaseUrl(): string {
-		return (value('LLM_BASE_URL') ?? 'https://router.bynara.id/v1').replace(/\/+$/, '');
+		return (value('LLM_BASE_URL') ?? 'https://thefreelance.duckdns.org/v1').replace(/\/+$/, '');
 	},
 	get llmApiKey(): string {
 		const v = value('LLM_API_KEY');

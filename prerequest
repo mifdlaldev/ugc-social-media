@@ -5,7 +5,7 @@ ORM => drizzle ORM
 database => sqlite
 component => shadcn-svelte
 deploy => cloudflare worker
-ai provider => OpenAI-compatible gateway (`LLM_BASE_URL`), currently NaraRouter (`https://router.bynara.id/v1`) for free-tier operation.
+ai provider => OpenAI-compatible gateway (`LLM_BASE_URL`), currently `https://thefreelance.duckdns.org/v1`.
 
 skill => 
 https://www.shadcn-svelte.com/docs/skills

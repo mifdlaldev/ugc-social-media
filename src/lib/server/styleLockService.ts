@@ -30,19 +30,19 @@ The style_lock string MUST describe only these eight things, one short labelled 
 - MEDIUM: the rendering treatment, stated concretely (for example flat vector editorial illustration, or isometric technical illustration)
 - PALETTE: a small fixed set of named colours plus exactly ONE high-contrast accent
 - TYPOGRAPHY: a bold display treatment for headings, plus the weight and scale hierarchy down to labels
-- FOCAL POINT: the one dominant element or visual entry point each slide must have, and roughly where it sits
+- FOCAL POINT: one dominant element or visual entry point per slide; its position and composition may vary by slide
 - SHAPE LANGUAGE: line weight, corner treatment, icon style, texture
-- BACKGROUND: canvas treatment and how much negative space
+- BACKGROUND: canvas treatment and readable safe space; subtle grid, ruled texture, or constructive texture MAY support the selected visual form when text stays legible
 - CONTRAST: how the accent and the base separate, so the slide reads instantly at thumbnail size
-- CONSISTENCY: what must stay identical on every slide
+- CONSISTENCY: what must stay identical on every slide while per-slide composition and focal position may vary
 
 Visual impact rules:
 - The accent must contrast strongly against the base, not blend into it. Avoid an all-muted, low-contrast, washed-out scheme.
 - Headings must use a confident display weight with a clear size step down to body and label text.
 - Every slide must have one dominant focal element, not several competing ones.
-- Keep generous safe space so text is never crowded.
+- Keep generous safe space appropriate to each slide so text is never crowded; let each slide determine the amount and placement.
 - Use exactly one accent. Do not expand the palette with extra decorative colours.
-- No decorative clutter, no ornamental flourishes, no interface elements, no frames, no background patterns that fight the text.
+- No decorative clutter, no ornamental flourishes, no interface elements, or frames. Background texture must support the selected visual form and text legibility.
 
 Hard rules:
 - Aesthetic properties ONLY. Never include a fact, measurement, unit, price, percentage, material property, named standard, code reference, citation, date, or duration.

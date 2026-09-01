@@ -38,7 +38,7 @@ const EXACT_TEXT_RULE =
 	'EXACT TEXT: Render the quoted Indonesian text verbatim, with no translation, paraphrase, transliteration, or extra characters. Render it once and make it legible.';
 
 const EXCLUSIONS_RULE =
-	'EXCLUSIONS: No carousel dot indicators, page indicators, swipe arrows, application or browser interface, device frames, decorative borders or frames, watermarks, logos, signatures, QR codes, placeholder text, or additional text. No paragraph or block of body copy, and no rendering of any line from the composition-context section.';
+	'EXCLUSIONS: No carousel dot indicators, page indicators, swipe arrows, application or browser interface, or device frames. No decorative borders or frames. No watermarks, logos, signatures, or QR codes. No placeholder text or additional text beyond the specified artwork text. No paragraph or block of body copy, and no rendering of any line from the composition-context section.';
 
 /**
  * The style lock is inserted verbatim. Paraphrasing it would defeat its purpose:

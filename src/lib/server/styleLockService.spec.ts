@@ -157,9 +157,24 @@ describe('visual impact brief', () => {
 		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('Do not expand the palette');
 	});
 
-	it('requires one dominant focal element and generous safe space', () => {
+	it('requires one dominant focal element and slide-appropriate safe space', () => {
 		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('one dominant focal element');
-		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('generous safe space');
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('generous safe space appropriate to each slide');
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('let each slide determine the amount and placement');
+	});
+
+	it('allows constructive background texture without requiring it', () => {
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain(
+			'subtle grid, ruled texture, or constructive texture'
+		);
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('when text stays legible');
+		expect(STYLE_LOCK_SYSTEM_PROMPT).not.toContain('no background patterns that fight the text');
+		expect(STYLE_LOCK_SYSTEM_PROMPT).not.toContain('fixed empty-space proportion');
+	});
+
+	it('allows focal position and composition to vary by slide', () => {
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('position and composition may vary by slide');
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('per-slide composition and focal position may vary');
 	});
 
 	it('forbids clutter and interface ornament', () => {

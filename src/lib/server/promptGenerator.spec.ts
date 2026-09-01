@@ -97,16 +97,28 @@ describe('shared prompt rules', () => {
 				'carousel dot indicators',
 				'page indicators',
 				'swipe arrows',
+				'application or browser interface',
 				'device frames',
+				'decorative borders or frames',
 				'watermarks',
 				'logos',
 				'signatures',
 				'QR codes',
 				'placeholder text',
-				'additional text'
+				'additional text',
+				'paragraph or block of body copy',
+				'rendering of any line from the composition-context section'
 			]) {
 				expect(prompt, `${provider} / ${excluded}`).toContain(excluded);
 			}
+		}
+	});
+
+	it('groups the exclusions into separate sentences', () => {
+		for (const provider of PROVIDERS) {
+			const prompt = buildProviderPrompt(provider, ctx);
+			const exclusions = prompt.slice(prompt.indexOf('EXCLUSIONS:'));
+			expect(exclusions.split('. ').length, provider).toBeGreaterThan(1);
 		}
 	});
 

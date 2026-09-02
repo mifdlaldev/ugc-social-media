@@ -4,13 +4,11 @@ compatibility_flags = ["nodejs_compat"]
 main = ".svelte-kit/cloudflare/_worker.js"
 assets = { binding = "ASSETS", directory = ".svelte-kit/cloudflare" }
 
-# D1 database binding (production). Provision with:
-#   bunx wrangler d1 create ugc-social-media-db
-#   bunx wrangler d1 execute ugc-social-media-db --file=./drizzle/migrations/0000_*.sql --remote
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "ugc-social-media-db"
-# database_id = "<paste-id-here>"
+# D1 database binding (production)
+[[d1_databases]]
+binding = "DB"
+database_name = "ugc-social-media-db"
+database_id = "b3a6dbb0-5685-4e08-88a8-6de3334878de"
 
 # Secrets (set via `wrangler secret put` — never commit values):
 #   LLM_API_KEY

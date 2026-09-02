@@ -3,7 +3,7 @@ import { loginOwner, requireOwner } from './auth';
 import { clearSessionCookie } from './session';
 import { postsApi } from './postsApi';
 
-export const api = new Elysia()
+export const api = new Elysia({ aot: false })
 	.get('/api/health', () => ({
 		status: 'ok',
 		service: 'ugc-social-media-api',

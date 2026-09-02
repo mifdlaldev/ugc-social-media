@@ -33,7 +33,7 @@ interface ChatCompletionResponse {
  * output with an 8000-token ceiling, it only gives the model room to think for
  * longer, which on a shared free tier is what makes a run slow and flaky.
  */
-export const REASONING_HEADROOM_TOKENS = 2000;
+export const REASONING_HEADROOM_TOKENS = 500;
 export const DEFAULT_MAX_TOKENS = 4000;
 export const DEFAULT_REASONING_EFFORT: ReasoningEffort = 'low';
 

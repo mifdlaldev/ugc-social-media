@@ -248,49 +248,53 @@ export async function generateSlides(
 		visualCommand,
 		slideCount
 	);
-	const slides: GeneratedSlide[] = [];
 
-	for (const brief of synthesis.slides) {
-		if (slides.length > 0) {
-			await new Promise((resolve) => setTimeout(resolve, SLIDE_CALL_SPACING_MS));
-		}
-		const ctx: SlideContext = {
-			topic,
-			placementLabel: `${placement.platform} ${placement.placement}`,
-			visualCommand: command.value,
-			visualCommandDescription: command.description,
-			slide_type: brief.slide_type,
-			slide_title: brief.slide_title,
-			slideSubtitle: brief.slide_subtitle,
-			slideExplanation: brief.slide_explanation,
-			visualLabels: brief.visual_labels,
-			slideTakeaway: brief.slide_takeaway,
-			research_context: brief.research_context,
-			slide_index: brief.slide_index,
-			slideCount: synthesis.slides.length,
-			width: placement.width,
-			height: placement.height,
-			aspectRatio: placement.ratio as AspectRatio,
-			visualNotes: '',
-			onImageText: '',
-			styleLock
-		};
+	// Build all slide contexts first, then run visual notes in parallel.
+	// Each slide consumes ~500 tokens and the gateway is slow for reasoning
+	// models, so parallel execution cuts wall-time from N sequential calls
+	// to a single batch.
+	const contexts: SlideContext[] = synthesis.slides.map((brief) => ({
+		topic,
+		placementLabel: `${placement.platform} ${placement.placement}`,
+		visualCommand: command.value,
+		visualCommandDescription: command.description,
+		slide_type: brief.slide_type,
+		slide_title: brief.slide_title,
+		slideSubtitle: brief.slide_subtitle,
+		slideExplanation: brief.slide_explanation,
+		visualLabels: brief.visual_labels,
+		slideTakeaway: brief.slide_takeaway,
+		research_context: brief.research_context,
+		slide_index: brief.slide_index,
+		slideCount: synthesis.slides.length,
+		width: placement.width,
+		height: placement.height,
+		aspectRatio: placement.ratio as AspectRatio,
+		visualNotes: '',
+		onImageText: '',
+		styleLock
+	}));
 
-		const visualData = await buildVisualNotes(ctx);
-		ctx.visualNotes = visualData.visual_notes;
-		ctx.onImageText = visualData.on_image_text;
+	const visualResults = await Promise.all(
+		contexts.map((ctx) => buildVisualNotes(ctx))
+	);
+
+	const slides: GeneratedSlide[] = contexts.map((ctx, i) => {
+		const brief = synthesis.slides[i];
+		ctx.visualNotes = visualResults[i].visual_notes;
+		ctx.onImageText = visualResults[i].on_image_text;
 
 		const variants: ProviderVariant[] = (['gpt-image', 'nano-banana', 'recraft'] as Provider[]).map(
 			(provider) => ({
 				provider,
 				prompt_text: buildProviderPrompt(provider, ctx),
-				visual_notes: visualData.visual_notes,
-				on_image_text: visualData.on_image_text,
+				visual_notes: visualResults[i].visual_notes,
+				on_image_text: visualResults[i].on_image_text,
 				aspect_ratio: ctx.aspectRatio
 			})
 		);
 
-		slides.push({
+		return {
 			slide_index: brief.slide_index,
 			slide_type: brief.slide_type,
 			slide_title: brief.slide_title,
@@ -300,8 +304,8 @@ export async function generateSlides(
 			slide_takeaway: brief.slide_takeaway,
 			research_context: brief.research_context,
 			variants
-		});
-	}
+		};
+	});
 
 	return { synthesis, slides };
 }

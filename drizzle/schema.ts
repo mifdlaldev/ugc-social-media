@@ -102,6 +102,16 @@ export const posts = sqliteTable(
 		 * never engineering facts. See src/lib/server/styleLockService.ts.
 		 */
 		style_lock: text('style_lock'),
+		/**
+		 * Owner switch: when false, generation skips the style lock entirely and
+		 * every slide is composed from the visual command, placement, and per-slide
+		 * visual notes alone. When true (default), the saved style lock is injected
+		 * verbatim into every slide prompt for carousel consistency. The saved text
+		 * is kept so the owner can flip back without regenerating it.
+		 */
+		style_lock_enabled: integer('style_lock_enabled', { mode: 'boolean' })
+			.notNull()
+			.default(true),
 		/** Owner workflow state: has this been published to social media yet? */
 		post_status: text('post_status', { enum: ['draft', 'posted'] })
 			.notNull()

@@ -38,13 +38,19 @@ const EXACT_TEXT_RULE =
 	'EXACT TEXT: Render the quoted Indonesian text verbatim, with no translation, paraphrase, transliteration, or extra characters. Render it once and make it legible.';
 
 const EXCLUSIONS_RULE =
-	'EXCLUSIONS: No carousel dot indicators, page indicators, swipe arrows, application or browser interface, or device frames. No decorative borders or frames. No watermarks, logos, signatures, or QR codes. No placeholder text or additional text beyond the specified artwork text. No paragraph or block of body copy, and no rendering of any line from the composition-context section.';
+	'EXCLUSIONS: No carousel dot indicators, page indicators, swipe arrows, application or browser interface, or device frames. No navigation arrows or interface imitation; diagrammatic or compositional arrows described in visual direction are allowed only as artwork, never as navigation. No decorative borders or ornamental frames; a structural composition frame described in visual direction is allowed as artwork. No watermarks, logos, signatures, or QR codes. No placeholder text or additional text beyond the specified artwork text. No paragraph or block of body copy, and no rendering of any line from the composition-context section.';
+
+const LAYOUT_RULE =
+	'LAYOUT: Plan the text zone, the subject zone, and the label anchors before rendering. Set the primary text as ONE block with a single shared alignment, a proportional usable width within its text band, balanced line lengths, and consistent line-height, so no large unused space is left beside it; break lines only where the wording allows and never alter, reorder, or reflow the characters themselves. Do not let a divider, colour field, or any split device cut through or strand the primary text block, and do not narrow that block into a thin column beside an empty field. Give every label the same badge treatment, padding, and alignment rhythm, and place each one beside the part it identifies. Keep all text, labels, and every labelled subject fully inside the canvas with a clear margin from each edge; a dominant labelled subject should fill its subject zone at a meaningful scale instead of being shrunk or centred uniformly just to stay inside the canvas; only unlabelled atmosphere or purely decorative elements may run off the edge. When the slide compares or pairs subjects, differentiate them by scale, angle, depth, overlap, elevation, or placement rather than rendering mirrored equal rivals, unless the slide meaning requires a symmetric diagram.';
 
 /**
  * The style lock is inserted verbatim. Paraphrasing it would defeat its purpose:
- * every slide must carry byte-identical aesthetic direction.
+ * every slide must carry byte-identical aesthetic direction. When empty the
+ * block is omitted entirely so the slide prompt composes from the per-slide
+ * visual notes and placement alone, without hallucinated style.
  */
 function styleLockBlock(styleLock: string): string {
+	if (styleLock.trim().length === 0) return '';
 	return `STYLE LOCK — PRESERVE VERBATIM ACROSS ALL SLIDES:\n${styleLock}`;
 }
 
@@ -103,6 +109,7 @@ Target canvas: ${ctx.width}x${ctx.height} pixels, ${ctx.aspectRatio} aspect rati
 ${styleLockBlock(ctx.styleLock)}
 ${contextBlock(ctx)}
 ${EXACT_TEXT_RULE}
+${LAYOUT_RULE}
 ${EXCLUSIONS_RULE}
 Render text accurately in Indonesian language. High contrast. Sharp edges.`,
 
@@ -114,6 +121,7 @@ Target canvas: ${ctx.width}x${ctx.height} pixels, ${ctx.aspectRatio} aspect rati
 ${styleLockBlock(ctx.styleLock)}
 ${contextBlock(ctx)}
 ${EXACT_TEXT_RULE}
+${LAYOUT_RULE}
 ${EXCLUSIONS_RULE}
 High quality, professional photography or 3D render style. Cinematic lighting.`,
 
@@ -126,6 +134,7 @@ Target canvas: ${ctx.width}x${ctx.height} pixels, ${ctx.aspectRatio} aspect rati
 ${styleLockBlock(ctx.styleLock)}
 ${contextBlock(ctx)}
 ${EXACT_TEXT_RULE}
+${LAYOUT_RULE}
 ${EXCLUSIONS_RULE}
 Color palette: limited 3-4 colors, brand-aligned. Clean lines, modern flat illustration.`
 };
@@ -155,8 +164,16 @@ You must return a JSON object with exactly this shape:
 Rules:
 - visual_notes must follow the supplied visual form and be concrete and visual
 - visual_notes must name one dominant focal point and state where it sits
-- visual_notes must place labels next to the components they identify, not in a separate legend
+- visual_notes must describe one deliberate editorial composition or visual concept for the slide (for example comparison split, diagonal tension, exploded arrangement, cutaway, framed vignette, layered stack, or process path) and the spatial relationship between the focal element and its supporting parts
+- visual_notes must use at least one composition device when it suits the visual form: bold divider, colour field, diagonal division, diagrammatic arrow, callout line, frame, badge, drop shadow, texture field, overlap, varied scale, depth, or spatial rhythm
+- visual_notes must place labels next to the components they identify, not in a separate legend, and give every label the same badge treatment, padding, and alignment rhythm
+- visual_notes must allocate a text zone, a subject zone, and the label anchors, and set the primary text as one aligned block with proportional usable width within its text band and balanced line lengths so no large unused space is left beside it
+- visual_notes must keep text-zone placement compatible with any divider, colour field, or split device; no device may cut through or strand the primary text block or narrow it beside an empty field
+- visual_notes must keep every labelled subject, label, and the text fully inside the canvas with a clear edge margin; the dominant labelled subject must retain meaningful scale within its subject zone; only unlabelled atmosphere or purely decorative elements may run off the edge
+- for comparison or paired-subject slides, visual_notes must create hierarchy or contrast through scale, angle, depth, overlap, elevation, or placement and must not default to mirrored equal rivals unless the slide meaning requires a symmetric diagram
+- visual_notes must not default to a centred inventory grid, uniform tiles, a fixed 3x2 or 2x3 arrangement, or a headline-at-top catalogue sheet unless the selected visual form or slide meaning requires that arrangement; when a grid is required, still specify hierarchy, contrast, or another deliberate art-direction choice
 - visual_notes must not add engineering facts, numbers, materials, dimensions, standards, citations, or claims
+- visual_notes may use an arrow only as a diagrammatic or compositional element that explains a relationship or process; never as a carousel navigation arrow or interface cue
 - on_image_text is the ONLY primary text that will be drawn on the image, so it must stand on its own
 - on_image_text must be Indonesian and must agree with the supplied slide title and explanation
 - on_image_text must stay short enough to render legibly at small size; never copy the whole explanation into it
@@ -220,7 +237,9 @@ export async function generateSlides(
 	const command = findVisualCommand(visualCommand);
 	if (!placement) throw new Error('INVALID_PLATFORM_PLACEMENT');
 	if (!command) throw new Error('INVALID_VISUAL_COMMAND');
-	if (styleLock.trim().length === 0) throw new Error('STYLE_LOCK_REQUIRED');
+	// styleLock may be empty when the owner disables the style lock (creative mode).
+	// The prompt templates omit the STYLE LOCK block entirely for an empty value,
+	// so per-slide visual notes + placement remain the only direction.
 
 	const synthesis = await synthesizeBriefs(
 		topic,

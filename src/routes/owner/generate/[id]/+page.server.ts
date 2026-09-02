@@ -66,7 +66,7 @@ export const actions: Actions = {
 			.join('\n\n');
 
 		const styleLock = (post.style_lock ?? '').trim();
-		if (styleLock.length === 0) {
+		if (post.style_lock_enabled !== false && styleLock.length === 0) {
 			return {
 				success: false,
 				error: 'Belum ada style lock. Buat style lock dulu sebelum generate.'

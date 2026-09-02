@@ -80,6 +80,9 @@
 				{#if post.style_lock}
 					<Badge variant="outline">style lock aktif</Badge>
 				{/if}
+				{#if post.style_lock_enabled === false}
+					<Badge variant="outline">style lock nonaktif</Badge>
+				{/if}
 			</div>
 		</div>
 		<div class="flex gap-2">
@@ -91,7 +94,7 @@
 	{#if slides.length === 0}
 		<Card.Root class="mb-6">
 			<Card.Content class="py-16 text-center">
-				{#if !post.style_lock}
+				{#if post.style_lock_enabled !== false && !post.style_lock}
 					<p class="text-caption mb-4 text-text-muted">
 						Belum ada style lock. Buat style lock dulu di halaman riset sebelum generate.
 					</p>

@@ -8,6 +8,69 @@
 			"when": 1787920895244,
 			"tag": "0000_greedy_darkhawk",
 			"breakpoints": true
+		},
+		{
+			"idx": 1,
+			"version": "6",
+			"when": 1788323600000,
+			"tag": "0001_social_media_revamp",
+			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "6",
+			"when": 1788411300000,
+			"tag": "0002_fix_generation_attempts",
+			"breakpoints": true
+		},
+		{
+			"idx": 3,
+			"version": "6",
+			"when": 1788442440000,
+			"tag": "0003_uuid_primary_keys",
+			"breakpoints": true
+		},
+		{
+			"idx": 4,
+			"version": "6",
+			"when": 1788442800000,
+			"tag": "0004_post_status",
+			"breakpoints": true
+		},
+		{
+			"idx": 5,
+			"version": "6",
+			"when": 1788626780000,
+			"tag": "0005_visual_command_and_placement",
+			"breakpoints": true
+		},
+		{
+			"idx": 6,
+			"version": "6",
+			"when": 1788658980000,
+			"tag": "0006_style_lock",
+			"breakpoints": true
+		},
+		{
+			"idx": 7,
+			"version": "6",
+			"when": 1788682800000,
+			"tag": "0007_teaching_fields",
+			"breakpoints": true
+		},
+		{
+			"idx": 8,
+			"version": "6",
+			"when": 1788759780000,
+			"tag": "0008_visual_command_recommendations",
+			"breakpoints": true
+		},
+		{
+			"idx": 9,
+			"version": "6",
+			"when": 1788850000000,
+			"tag": "0009_style_lock_enabled",
+			"breakpoints": true
 		}
 	]
 }

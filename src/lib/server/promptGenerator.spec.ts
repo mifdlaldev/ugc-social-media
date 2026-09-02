@@ -99,7 +99,7 @@ describe('shared prompt rules', () => {
 				'swipe arrows',
 				'application or browser interface',
 				'device frames',
-				'decorative borders or frames',
+				'decorative borders or ornamental frames',
 				'watermarks',
 				'logos',
 				'signatures',
@@ -119,6 +119,91 @@ describe('shared prompt rules', () => {
 			const prompt = buildProviderPrompt(provider, ctx);
 			const exclusions = prompt.slice(prompt.indexOf('EXCLUSIONS:'));
 			expect(exclusions.split('. ').length, provider).toBeGreaterThan(1);
+		}
+	});
+
+	it('distinguishes diagrammatic arrows from navigation arrows', () => {
+		for (const provider of PROVIDERS) {
+			const prompt = buildProviderPrompt(provider, ctx);
+			expect(prompt, provider).toContain('No navigation arrows or interface imitation');
+			expect(prompt, provider).toContain('diagrammatic or compositional arrows');
+		}
+	});
+
+	it('applies consistent layout and subject containment rules', () => {
+		for (const provider of PROVIDERS) {
+			const prompt = buildProviderPrompt(provider, ctx);
+			expect(prompt, provider).toContain(
+				'Plan the text zone, the subject zone, and the label anchors'
+			);
+			expect(prompt, provider).toContain('ONE block with a single shared alignment');
+			expect(prompt, provider).toContain('balanced line lengths');
+			expect(prompt, provider).toContain('same badge treatment, padding, and alignment rhythm');
+			expect(prompt, provider).toContain('every labelled subject fully inside the canvas');
+			expect(prompt, provider).toContain(
+				'only unlabelled atmosphere or purely decorative elements'
+			);
+		}
+	});
+
+	it('gives primary text a proportional width instead of a narrow column', () => {
+		for (const provider of PROVIDERS) {
+			const prompt = buildProviderPrompt(provider, ctx);
+			expect(prompt, provider).toContain('proportional usable width within its text band');
+			expect(prompt, provider).toContain(
+				'do not narrow that block into a thin column beside an empty field'
+			);
+			expect(prompt, provider).not.toContain('a controlled maximum measure');
+		}
+	});
+
+	it('keeps split devices out of the primary text block', () => {
+		for (const provider of PROVIDERS) {
+			expect(buildProviderPrompt(provider, ctx), provider).toContain(
+				'Do not let a divider, colour field, or any split device cut through or strand the primary text block'
+			);
+		}
+	});
+
+	it('keeps a dominant labelled subject at meaningful scale', () => {
+		for (const provider of PROVIDERS) {
+			const prompt = buildProviderPrompt(provider, ctx);
+			expect(prompt, provider).toContain(
+				'a dominant labelled subject should fill its subject zone at a meaningful scale'
+			);
+			expect(prompt, provider).toContain(
+				'instead of being shrunk or centred uniformly just to stay inside the canvas'
+			);
+		}
+	});
+
+	it('differentiates compared subjects instead of mirroring them', () => {
+		for (const provider of PROVIDERS) {
+			const prompt = buildProviderPrompt(provider, ctx);
+			expect(prompt, provider).toContain(
+				'differentiate them by scale, angle, depth, overlap, elevation, or placement'
+			);
+			expect(prompt, provider).toContain('rather than rendering mirrored equal rivals');
+			expect(prompt, provider).toContain('unless the slide meaning requires a symmetric diagram');
+		}
+	});
+
+	it('allows a structural composition frame while excluding decorative borders', () => {
+		for (const provider of PROVIDERS) {
+			const prompt = buildProviderPrompt(provider, ctx);
+			expect(prompt, provider).toContain('No decorative borders or ornamental frames');
+			expect(prompt, provider).toContain(
+				'a structural composition frame described in visual direction is allowed as artwork'
+			);
+		}
+	});
+
+	it('invents no pixel margin and promises no provider compliance', () => {
+		for (const provider of PROVIDERS) {
+			const layout = buildProviderPrompt(provider, ctx);
+			const layoutRule = layout.slice(layout.indexOf('LAYOUT:'), layout.indexOf('EXCLUSIONS:'));
+			expect(layoutRule, provider).not.toMatch(/\d+\s?(px|pixels|mm|pt)\b/);
+			expect(layoutRule.toLowerCase(), provider).not.toContain('guarantee');
 		}
 	});
 
@@ -267,6 +352,61 @@ describe('visual-note instruction', () => {
 
 	it('requires one dominant focal point in the notes', () => {
 		expect(VISUAL_NOTES_SYSTEM_PROMPT).toContain('one dominant focal point');
+	});
+
+	it('requires creative editorial composition', () => {
+		expect(VISUAL_NOTES_SYSTEM_PROMPT).toContain(
+			'one deliberate editorial composition or visual concept'
+		);
+		expect(VISUAL_NOTES_SYSTEM_PROMPT).toContain('spatial relationship between the focal element');
+		expect(VISUAL_NOTES_SYSTEM_PROMPT).toContain('at least one composition device');
+	});
+
+	it('discourages boring catalogue layouts', () => {
+		expect(VISUAL_NOTES_SYSTEM_PROMPT).toContain('centred inventory grid');
+		expect(VISUAL_NOTES_SYSTEM_PROMPT).toContain('fixed 3x2 or 2x3 arrangement');
+		expect(VISUAL_NOTES_SYSTEM_PROMPT).toContain('when a grid is required');
+	});
+
+	it('separates diagram arrows from navigation UI', () => {
+		expect(VISUAL_NOTES_SYSTEM_PROMPT).toContain('diagrammatic or compositional element');
+		expect(VISUAL_NOTES_SYSTEM_PROMPT).toContain('carousel navigation arrow');
+	});
+
+	it('requires text zone, subject zone, and label anchors', () => {
+		expect(VISUAL_NOTES_SYSTEM_PROMPT).toContain(
+			'allocate a text zone, a subject zone, and the label anchors'
+		);
+		expect(VISUAL_NOTES_SYSTEM_PROMPT).toContain(
+			'one aligned block with proportional usable width within its text band'
+		);
+		expect(VISUAL_NOTES_SYSTEM_PROMPT).toContain('balanced line lengths');
+		expect(VISUAL_NOTES_SYSTEM_PROMPT).toContain(
+			'same badge treatment, padding, and alignment rhythm'
+		);
+		expect(VISUAL_NOTES_SYSTEM_PROMPT).toContain(
+			'every labelled subject, label, and the text fully inside the canvas'
+		);
+		expect(VISUAL_NOTES_SYSTEM_PROMPT).not.toContain('one aligned block with a controlled width');
+	});
+
+	it('requires split safety and meaningful dominant scale', () => {
+		expect(VISUAL_NOTES_SYSTEM_PROMPT).toContain(
+			'no device may cut through or strand the primary text block'
+		);
+		expect(VISUAL_NOTES_SYSTEM_PROMPT).toContain(
+			'the dominant labelled subject must retain meaningful scale within its subject zone'
+		);
+	});
+
+	it('requires anti-symmetry for comparisons', () => {
+		expect(VISUAL_NOTES_SYSTEM_PROMPT).toContain(
+			'visual_notes must create hierarchy or contrast through scale, angle, depth, overlap, elevation, or placement'
+		);
+		expect(VISUAL_NOTES_SYSTEM_PROMPT).toContain('must not default to mirrored equal rivals');
+		expect(VISUAL_NOTES_SYSTEM_PROMPT).toContain(
+			'unless the slide meaning requires a symmetric diagram'
+		);
 	});
 
 	it('carries the voice and honesty rules', () => {

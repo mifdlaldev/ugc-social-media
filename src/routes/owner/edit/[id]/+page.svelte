@@ -23,6 +23,9 @@
 	/** Same pattern for an applied command: reflect it before the load refreshes. */
 	let localCommand = $state<string | null>(null);
 	let visualCommand = $derived(localCommand ?? data.post.visual_command);
+	/** Mirrors the style-lock toggle so the approve gate reads the live value. */
+	let localEnabled = $state<boolean>(data.post.style_lock_enabled ?? true);
+	let styleLockEnabled = $derived(localEnabled);
 	let researching = $state(false);
 	let approveError = $state('');
 
@@ -49,7 +52,7 @@
 			approveError = 'Belum ada sumber. Jalankan riset dulu.';
 			return;
 		}
-		if (styleLock.trim().length === 0) {
+		if (styleLockEnabled && styleLock.trim().length === 0) {
 			approveError = 'Belum ada style lock. Buat style lock dulu di panel di atas.';
 			return;
 		}
@@ -131,8 +134,10 @@
 	<StyleLockPanel
 		postId={post.id}
 		initialStyleLock={data.styleLock}
+		initialEnabled={data.post.style_lock_enabled}
 		canGenerate={sources.length > 0}
 		onChange={(value) => (localStyleLock = value)}
+		onEnabledChange={(value) => (localEnabled = value)}
 	/>
 
 	<VisualCommandRecommendationPanel

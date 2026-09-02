@@ -319,6 +319,32 @@ export const postsApi = new Elysia({ prefix: '/api' })
 			})
 		}
 	)
+	.patch(
+		'/posts/:id/style-lock-enabled',
+		async ({ request, params, body, set }) => {
+			await requireOwner(request);
+			const post = await getOwnerPostById(params.id);
+			if (!post) {
+				set.status = 404;
+				return { success: false, error: 'Post not found' };
+			}
+			const [updated] = await db
+				.update(posts)
+				.set({ style_lock_enabled: body.enabled })
+				.where(eq(posts.id, post.id))
+				.returning();
+			set.status = 200;
+			return {
+				success: true,
+				style_lock_enabled: updated?.style_lock_enabled ?? body.enabled
+			};
+		},
+		{
+			body: t.Object({
+				enabled: t.Boolean()
+			})
+		}
+	)
 	.post('/posts/:id/generate', async ({ request, params, set }) => {
 		await requireOwner(request);
 		const post = await getOwnerPostById(params.id);
@@ -335,7 +361,7 @@ export const postsApi = new Elysia({ prefix: '/api' })
 			return { success: false, error: 'No research sources' };
 		}
 		const styleLock = (post.style_lock ?? '').trim();
-		if (styleLock.length === 0) {
+		if (post.style_lock_enabled && styleLock.length === 0) {
 			set.status = 400;
 			return {
 				success: false,
@@ -350,7 +376,7 @@ export const postsApi = new Elysia({ prefix: '/api' })
 				post.platform_placement,
 				post.visual_command,
 				post.slide_count,
-				styleLock
+				post.style_lock_enabled ? styleLock : ''
 			);
 			const oldSlides = await db
 				.select({ id: prompt_slides.id })

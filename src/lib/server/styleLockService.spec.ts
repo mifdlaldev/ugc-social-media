@@ -182,9 +182,97 @@ describe('visual impact brief', () => {
 		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('no interface elements');
 	});
 
+	it('asks for positive art direction, not only object treatment', () => {
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('Art direction rules:');
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('editorial composition language');
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('texture, depth, or surface treatment');
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('visual rhythm');
+	});
+
+	it('names reusable composition devices in the shape language line', () => {
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('composition devices the set may reuse');
+		for (const device of ['colour field', 'diagonal division', 'bold divider', 'callout line']) {
+			expect(STYLE_LOCK_SYSTEM_PROMPT, device).toContain(device);
+		}
+	});
+
+	it('rejects a catalogue-sheet result while staying a system, not a layout', () => {
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('rather than a catalogue sheet');
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('reusable design system, not a fixed layout');
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain(
+			'Do not fix one arrangement, one grid, one focal position, or one named reference style'
+		);
+	});
+
+	it('allows a diagrammatic arrow but no navigation arrow', () => {
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain(
+			'An arrow is allowed only as a diagrammatic or compositional element, never as navigation'
+		);
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('no carousel dots, page indicators, swipe arrows');
+	});
+
 	it('keeps the aesthetic-only rule intact alongside the impact rules', () => {
 		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('Aesthetic properties ONLY');
 		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('named standard');
+	});
+
+	it('requires typography layout discipline', () => {
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('proportional usable width within the text band');
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('balanced line lengths');
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('consistent line-height and gap steps');
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('one stable text-block alignment and label rhythm');
+		expect(STYLE_LOCK_SYSTEM_PROMPT).not.toContain('controlled maximum measure');
+	});
+
+	it('keeps split devices away from the primary text block', () => {
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain(
+			'must not cut through or strand the primary text block'
+		);
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain(
+			'do not leave an arbitrary void beside it caused by a decorative split'
+		);
+	});
+
+	it('keeps dominant labelled subjects at meaningful scale', () => {
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain(
+			'a dominant labelled subject fills its subject zone while staying inside that margin'
+		);
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain(
+			'Keep dominant labelled subjects meaningful in scale within their subject zones'
+		);
+	});
+
+	it('rejects mirrored equal rivals for comparison slides', () => {
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('instead of becoming a mirrored equal rival');
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('avoid mirrored equal rivals unless symmetry');
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain('requires a symmetric diagram');
+	});
+
+	it('separates structural framing from decorative borders', () => {
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain(
+			'a structural composition frame is a composition device, never a decorative border or a device frame'
+		);
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain(
+			'A structural composition frame is allowed as artwork; decorative borders and device frames remain prohibited'
+		);
+	});
+
+	it('keeps text, labels, and labelled subjects inside the canvas', () => {
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain(
+			'text, labels, and every labelled subject stay inside the breathing margin'
+		);
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain(
+			'Keep every labelled subject and label fully visible inside the canvas with a clear edge buffer'
+		);
+	});
+
+	it('limits edge cropping to unlabelled or decorative elements', () => {
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain(
+			'only unlabelled atmosphere or purely decorative elements may be cropped at an edge'
+		);
+		expect(STYLE_LOCK_SYSTEM_PROMPT).toContain(
+			'crop only unlabelled atmosphere or purely decorative elements'
+		);
 	});
 
 	it('accepts a high-contrast specification that carries no facts', () => {

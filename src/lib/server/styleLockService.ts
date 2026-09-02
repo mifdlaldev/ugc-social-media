@@ -29,20 +29,24 @@ Return a JSON object with exactly this shape:
 The style_lock string MUST describe only these eight things, one short labelled line each:
 - MEDIUM: the rendering treatment, stated concretely (for example flat vector editorial illustration, or isometric technical illustration)
 - PALETTE: a small fixed set of named colours plus exactly ONE high-contrast accent
-- TYPOGRAPHY: a bold display treatment for headings, plus the weight and scale hierarchy down to labels
-- FOCAL POINT: one dominant element or visual entry point per slide; its position and composition may vary by slide
-- SHAPE LANGUAGE: line weight, corner treatment, icon style, texture
-- BACKGROUND: canvas treatment and readable safe space; subtle grid, ruled texture, or constructive texture MAY support the selected visual form when text stays legible
+- TYPOGRAPHY: a bold display treatment for headings, plus the weight and scale hierarchy down to labels, and the text-block system — shared alignment, a proportional usable width within the text band, balanced line lengths, and consistent line-height and gap steps
+- FOCAL POINT: one dominant element or visual entry point per slide; its position and composition may vary by slide; where a slide compares or pairs subjects, one subject dominates through scale, depth, overlap, angle, elevation, or placement instead of becoming a mirrored equal rival, unless the slide meaning requires a symmetric diagram; only unlabelled atmosphere or purely decorative elements may be cropped at an edge
+- SHAPE LANGUAGE: line weight, corner treatment, icon style, texture, and the composition devices the set may reuse (colour field, diagonal division, bold divider, diagrammatic arrow, callout line, structural composition frame, badge, drop shadow, geometric accent); a structural composition frame is a composition device, never a decorative border or a device frame
+- BACKGROUND: canvas treatment and readable safe space; text, labels, and every labelled subject stay inside the breathing margin, and a dominant labelled subject fills its subject zone while staying inside that margin; subtle grid, ruled texture, or constructive texture MAY support the selected visual form when text stays legible
 - CONTRAST: how the accent and the base separate, so the slide reads instantly at thumbnail size
 - CONSISTENCY: what must stay identical on every slide while per-slide composition and focal position may vary
 
-Visual impact rules:
+Art direction rules:
+- Specify an editorial composition language for the set: how a slide is divided, how depth and layering read, how elements overlap, and how scale varies between the dominant element and its supporting parts.
+- Specify a texture, depth, or surface treatment: flat field, grain, hatching, drop shadow, cut-paper layering, or another concrete treatment that suits the medium.
+- Specify how visual rhythm is created — through scale steps, direction, framing, geometric accents, or spatial spacing — so a slide reads as a designed poster rather than a catalogue sheet of evenly sized objects.
+- This is a reusable design system, not a fixed layout. Do not fix one arrangement, one grid, one focal position, or one named reference style for every slide.
 - The accent must contrast strongly against the base, not blend into it. Avoid an all-muted, low-contrast, washed-out scheme.
 - Headings must use a confident display weight with a clear size step down to body and label text.
 - Every slide must have one dominant focal element, not several competing ones.
 - Keep generous safe space appropriate to each slide so text is never crowded; let each slide determine the amount and placement.
 - Use exactly one accent. Do not expand the palette with extra decorative colours.
-- No decorative clutter, no ornamental flourishes, no interface elements, or frames. Background texture must support the selected visual form and text legibility.
+- Composition devices must serve hierarchy, relationship, or emphasis. Plan text zone, subject zone, and label anchors before placing devices. Use one stable text-block alignment and label rhythm across slides; give primary text proportional usable width within its text band, balance line lengths, and do not leave an arbitrary void beside it caused by a decorative split. Dividers, colour fields, and other split devices must not cut through or strand the primary text block. Keep dominant labelled subjects meaningful in scale within their subject zones. Keep every labelled subject and label fully visible inside the canvas with a clear edge buffer; crop only unlabelled atmosphere or purely decorative elements. For comparison or paired-subject slides, avoid mirrored equal rivals unless symmetry is required by the meaning. No decorative clutter, no ornamental flourishes, and no interface elements: no carousel dots, page indicators, swipe arrows, app or browser chrome, or device frames. An arrow is allowed only as a diagrammatic or compositional element, never as navigation. A structural composition frame is allowed as artwork; decorative borders and device frames remain prohibited.
 
 Hard rules:
 - Aesthetic properties ONLY. Never include a fact, measurement, unit, price, percentage, material property, named standard, code reference, citation, date, or duration.

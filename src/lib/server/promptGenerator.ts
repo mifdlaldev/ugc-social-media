@@ -329,7 +329,7 @@ Generate visual notes and on-image text for this slide. Return JSON only.`;
 			{ role: 'system', content: VISUAL_NOTES_SYSTEM_PROMPT },
 			{ role: 'user', content: userMessage }
 		],
-		{ jsonMode: true, maxTokens: 500, temperature: 0.7 }
+		{ jsonMode: true, maxTokens: 300, temperature: 0.7 }
 	);
 
 	const json = extractJson(content);

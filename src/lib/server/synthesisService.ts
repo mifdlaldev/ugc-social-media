@@ -128,7 +128,7 @@ Produce a brief for ${slideCount} slides. Output valid JSON only.`;
 			{ role: 'system', content: SYNTHESIS_SYSTEM_PROMPT },
 			{ role: 'user', content: userMessage }
 		],
-		{ jsonMode: true, maxTokens: 3000, temperature: 0.6 }
+		{ jsonMode: true, maxTokens: 1500, temperature: 0.6 }
 	);
 
 	const parsed = parseSynthesisResponse(content, slideCount);
